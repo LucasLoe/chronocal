@@ -1,0 +1,265 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e6]: Chronocal
+  - generic [ref=e10]:
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - button "Backlog" [ref=e13] [cursor=pointer]
+        - button "Zurueck" [ref=e14] [cursor=pointer]: <
+        - button "Vor" [ref=e15] [cursor=pointer]: ">"
+        - heading "Mai 2026" [level=6] [ref=e16]
+        - button "Heute" [ref=e17] [cursor=pointer]
+        - group [ref=e18]:
+          - button "Woche" [ref=e19] [cursor=pointer]
+          - button "Monat" [pressed] [ref=e20] [cursor=pointer]
+        - button "Wochenende" [pressed] [ref=e21] [cursor=pointer]
+        - generic [ref=e22]:
+          - generic [ref=e23]: Filter
+          - generic [ref=e24]:
+            - combobox "Filter" [ref=e25] [cursor=pointer]: Alle
+            - textbox: Alle
+            - img
+            - group:
+              - generic: Filter
+      - generic [ref=e27]:
+        - generic [ref=e29]: Mo
+        - generic [ref=e31]: Di
+        - generic [ref=e33]: Mi
+        - generic [ref=e35]: Do
+        - generic [ref=e37]: Fr
+        - generic [ref=e39]: Sa
+        - generic [ref=e41]: So
+        - generic [ref=e43]:
+          - generic [ref=e44]: Mo
+          - generic [ref=e45]: "27"
+        - generic [ref=e48]:
+          - generic [ref=e49]: Di
+          - generic [ref=e50]: "28"
+        - generic [ref=e53]:
+          - generic [ref=e54]: Mi
+          - generic [ref=e55]: "29"
+        - generic [ref=e58]:
+          - generic [ref=e59]: Do
+          - generic [ref=e60]: "30"
+        - generic [ref=e63]:
+          - generic [ref=e64]: Fr
+          - generic [ref=e65]: "1"
+        - generic [ref=e67]:
+          - generic [ref=e68]:
+            - generic [ref=e69]: Sa
+            - generic [ref=e70]: "2"
+          - generic [ref=e71]:
+            - generic "Sprint Planning" [ref=e73] [cursor=pointer]:
+              - generic [ref=e74]: 09:07
+              - generic [ref=e75]: Sprint Planning
+            - 'generic "Warnung: Feature Development" [ref=e77] [cursor=pointer]':
+              - generic [ref=e78]: 10:52
+              - generic [ref=e79]: Feature Development
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - generic [ref=e82]: So
+            - generic [ref=e83]: "3"
+          - generic "Timesheet Cleanup" [ref=e86] [cursor=pointer]:
+            - generic [ref=e87]: 08:43
+            - generic [ref=e88]: Timesheet Cleanup
+        - generic [ref=e89]:
+          - generic [ref=e90]:
+            - generic [ref=e91]: Mo
+            - generic [ref=e92]: "4"
+          - 'generic "Fehler: Kunden Workshop" [ref=e95] [cursor=pointer]':
+            - generic [ref=e96]: 13:12
+            - generic [ref=e97]: Kunden Workshop
+        - generic [ref=e98]:
+          - generic [ref=e99]:
+            - generic [ref=e100]: Di
+            - generic [ref=e101]: "5"
+          - generic [ref=e102]:
+            - 'generic "Deep Work: Reporting Export" [ref=e104] [cursor=pointer]':
+              - generic [ref=e105]: 07:58
+              - generic [ref=e106]: "Deep Work: Reporting Export"
+            - 'generic "Warnung: Design Critique" [ref=e108] [cursor=pointer]':
+              - generic [ref=e109]: 08:35
+              - generic [ref=e110]: Design Critique
+            - 'generic "Fehler: Customer QA Review" [ref=e112] [cursor=pointer]':
+              - generic [ref=e113]: 09:45
+              - generic [ref=e114]: Customer QA Review
+            - 'generic "Warnung: Bug Triage" [ref=e116] [cursor=pointer]':
+              - generic [ref=e117]: 10:19
+              - generic [ref=e118]: Bug Triage
+            - generic "Release Checklist" [ref=e120] [cursor=pointer]:
+              - generic [ref=e121]: 12:10
+              - generic [ref=e122]: Release Checklist
+            - 'generic "Warnung: Incident Follow-up" [ref=e124] [cursor=pointer]':
+              - generic [ref=e125]: 13:20
+              - generic [ref=e126]: Incident Follow-up
+            - generic "Spec Refinement" [ref=e128] [cursor=pointer]:
+              - generic [ref=e129]: 14:30
+              - generic [ref=e130]: Spec Refinement
+            - 'generic "Fehler: Inbox Zero" [ref=e132] [cursor=pointer]':
+              - generic [ref=e133]: 16:05
+              - generic [ref=e134]: Inbox Zero
+        - generic [ref=e136]:
+          - generic [ref=e137]: Mi
+          - generic [ref=e138]: "6"
+        - generic [ref=e141]:
+          - generic [ref=e142]: Do
+          - generic [ref=e143]: "7"
+        - generic [ref=e145]:
+          - generic [ref=e146]:
+            - generic [ref=e147]: Fr
+            - generic [ref=e148]: "8"
+          - generic "Roadmap Sync" [ref=e151] [cursor=pointer]:
+            - generic [ref=e152]: 14:05
+            - generic [ref=e153]: Roadmap Sync
+        - generic [ref=e154]:
+          - generic [ref=e155]:
+            - generic [ref=e156]: Sa
+            - generic [ref=e157]: "9"
+          - generic [ref=e158]:
+            - 'generic "Fehler: Implementation Block" [ref=e160] [cursor=pointer]':
+              - generic [ref=e161]: 09:23
+              - generic [ref=e162]: Implementation Block
+            - 'generic "Warnung: 1:1 Check-in" [ref=e164] [cursor=pointer]':
+              - generic [ref=e165]: 11:47
+              - generic [ref=e166]: 1:1 Check-in
+        - generic [ref=e168]:
+          - generic [ref=e169]: So
+          - generic [ref=e170]: "10"
+        - generic [ref=e172]:
+          - generic [ref=e173]:
+            - generic [ref=e174]: Mo
+            - generic [ref=e175]: "11"
+          - generic "Release Retro" [ref=e178] [cursor=pointer]:
+            - generic [ref=e179]: 15:09
+            - generic [ref=e180]: Release Retro
+        - generic [ref=e181]:
+          - generic [ref=e182]:
+            - generic [ref=e183]: Di
+            - generic [ref=e184]: "12"
+          - generic "Produkt Demo" [ref=e187] [cursor=pointer]:
+            - generic [ref=e188]: 13:29
+            - generic [ref=e189]: Produkt Demo
+        - generic [ref=e191]:
+          - generic [ref=e192]: Mi
+          - generic [ref=e193]: "13"
+        - generic [ref=e196]:
+          - generic [ref=e197]: Do
+          - generic [ref=e198]: "14"
+        - generic [ref=e200]:
+          - generic [ref=e201]:
+            - generic [ref=e202]: Fr
+            - generic [ref=e203]: "15"
+          - generic [ref=e204]:
+            - generic "Partner Sync" [ref=e206] [cursor=pointer]:
+              - generic [ref=e207]: 07:30
+              - generic [ref=e208]: Partner Sync
+            - 'generic "Warnung: Invoice Review" [ref=e210] [cursor=pointer]':
+              - generic [ref=e211]: 08:11
+              - generic [ref=e212]: Invoice Review
+            - 'generic "Fehler: Customer Integration" [ref=e214] [cursor=pointer]':
+              - generic [ref=e215]: 09:38
+              - generic [ref=e216]: Customer Integration
+            - 'generic "Warnung: Metrics Review" [ref=e218] [cursor=pointer]':
+              - generic [ref=e219]: 10:10
+              - generic [ref=e220]: Metrics Review
+            - 'generic "Fehler: Support Handoff" [ref=e222] [cursor=pointer]':
+              - generic [ref=e223]: 11:20
+              - generic [ref=e224]: Support Handoff
+            - generic "API Contract Review" [ref=e226] [cursor=pointer]:
+              - generic [ref=e227]: 14:15
+              - generic [ref=e228]: API Contract Review
+            - 'generic "Warnung: Focus Buffer" [ref=e230] [cursor=pointer]':
+              - generic [ref=e231]: 15:30
+              - generic [ref=e232]: Focus Buffer
+            - generic "Admin Sweep" [ref=e234] [cursor=pointer]:
+              - generic [ref=e235]: 17:00
+              - generic [ref=e236]: Admin Sweep
+        - generic [ref=e237]:
+          - generic [ref=e238]:
+            - generic [ref=e239]: Sa
+            - generic [ref=e240]: "16"
+          - generic "Code Review Batch" [ref=e243] [cursor=pointer]:
+            - generic [ref=e244]: 16:17
+            - generic [ref=e245]: Code Review Batch
+        - generic [ref=e247]:
+          - generic [ref=e248]: So
+          - generic [ref=e249]: "17"
+        - generic [ref=e251]:
+          - generic [ref=e252]:
+            - generic [ref=e253]: Mo
+            - generic [ref=e254]: "18"
+          - generic [ref=e255]:
+            - 'generic "Fehler: Production Support" [ref=e257] [cursor=pointer]':
+              - generic [ref=e258]: 06:34
+              - generic [ref=e259]: Production Support
+            - 'generic "Deep Work: Calendar Refactor" [ref=e261] [cursor=pointer]':
+              - generic [ref=e262]: 08:57
+              - generic [ref=e263]: "Deep Work: Calendar Refactor"
+        - generic [ref=e264]:
+          - generic [ref=e265]:
+            - generic [ref=e266]: Di
+            - generic [ref=e267]: "19"
+          - 'generic "Warnung: Planning Notes" [ref=e270] [cursor=pointer]':
+            - generic [ref=e271]: 12:13
+            - generic [ref=e272]: Planning Notes
+        - generic [ref=e274]:
+          - generic [ref=e275]: Mi
+          - generic [ref=e276]: "20"
+        - generic [ref=e279]:
+          - generic [ref=e280]: Do
+          - generic [ref=e281]: "21"
+        - generic [ref=e283]:
+          - generic [ref=e284]:
+            - generic [ref=e285]: Fr
+            - generic [ref=e286]: "22"
+          - generic [ref=e287]:
+            - generic "Stakeholder Review" [ref=e289] [cursor=pointer]:
+              - generic [ref=e290]: 10:04
+              - generic [ref=e291]: Stakeholder Review
+            - 'generic "Warnung: Analytics Investigation" [ref=e293] [cursor=pointer]':
+              - generic [ref=e294]: 10:41
+              - generic [ref=e295]: Analytics Investigation
+        - generic [ref=e296]:
+          - generic [ref=e297]:
+            - generic [ref=e298]: Sa
+            - generic [ref=e299]: "23"
+          - 'generic "Fehler: Kunden Call Follow-up" [ref=e302] [cursor=pointer]':
+            - generic [ref=e303]: 15:46
+            - generic [ref=e304]: Kunden Call Follow-up
+        - generic [ref=e306]:
+          - generic [ref=e307]: So
+          - generic [ref=e308]: "24"
+        - generic [ref=e310]:
+          - generic [ref=e311]:
+            - generic [ref=e312]: Mo
+            - generic [ref=e313]: "25"
+          - generic "Documentation Pass" [ref=e316] [cursor=pointer]:
+            - generic [ref=e317]: 09:16
+            - generic [ref=e318]: Documentation Pass
+        - generic [ref=e319]:
+          - generic [ref=e320]:
+            - generic [ref=e321]: Di
+            - generic [ref=e322]: "26"
+          - 'generic "Warnung: Support Escalation" [ref=e325] [cursor=pointer]':
+            - generic [ref=e326]: 13:03
+            - generic [ref=e327]: Support Escalation
+        - generic [ref=e329]:
+          - generic [ref=e330]: Mi
+          - generic [ref=e331]: "27"
+        - generic [ref=e333]:
+          - generic [ref=e334]:
+            - generic [ref=e335]: Do
+            - generic [ref=e336]: "28"
+          - generic "Monthly Timesheet Close" [ref=e339] [cursor=pointer]:
+            - generic [ref=e340]: 16:22
+            - generic [ref=e341]: Monthly Timesheet Close
+        - generic [ref=e343]:
+          - generic [ref=e344]: Fr
+          - generic [ref=e345]: "29"
+        - generic [ref=e348]:
+          - generic [ref=e349]: Sa
+          - generic [ref=e350]: "30"
+        - generic [ref=e353]:
+          - generic [ref=e354]: So
+          - generic [ref=e355]: "31"
+    - status [ref=e357]

@@ -1,0 +1,133 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e6]: Chronocal
+  - generic [ref=e10]:
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - button "Backlog" [ref=e13] [cursor=pointer]
+        - button "Zurueck" [ref=e14] [cursor=pointer]: <
+        - button "Vor" [ref=e15] [cursor=pointer]: ">"
+        - heading "11.-17. Mai 2026" [level=6] [ref=e358]
+        - button "Heute" [ref=e17] [cursor=pointer]
+        - group [ref=e18]:
+          - button "Woche" [active] [pressed] [ref=e19] [cursor=pointer]: Woche
+          - button "Monat" [ref=e20] [cursor=pointer]
+        - button "Wochenende" [pressed] [ref=e21] [cursor=pointer]
+        - generic [ref=e359]:
+          - generic [ref=e360]: Arbeitszeit
+          - generic [ref=e361]:
+            - combobox "Arbeitszeit" [ref=e362] [cursor=pointer]: 6-22 Uhr
+            - textbox: 6-22
+            - img
+            - group:
+              - generic: Arbeitszeit
+        - generic [ref=e363]:
+          - generic [ref=e364]: Zeitraster
+          - generic [ref=e365]:
+            - combobox "Zeitraster" [ref=e366] [cursor=pointer]: 15 Min.
+            - textbox: "15"
+            - img
+            - group:
+              - generic: Zeitraster
+        - generic [ref=e22]:
+          - generic [ref=e23]: Filter
+          - generic [ref=e24]:
+            - combobox "Filter" [ref=e25] [cursor=pointer]: Alle
+            - textbox: Alle
+            - img
+            - group:
+              - generic: Filter
+      - generic [ref=e27]:
+        - generic [ref=e367]:
+          - generic [ref=e371]: 06:00
+          - generic [ref=e374]: 07:00
+          - generic [ref=e377]: 08:00
+          - generic [ref=e380]: 09:00
+          - generic [ref=e383]: 10:00
+          - generic [ref=e386]: 11:00
+          - generic [ref=e389]: 12:00
+          - generic [ref=e392]: 13:00
+          - generic [ref=e395]: 14:00
+          - generic [ref=e398]: 15:00
+          - generic [ref=e401]: 16:00
+          - generic [ref=e404]: 17:00
+          - generic [ref=e407]: 18:00
+          - generic [ref=e410]: 19:00
+          - generic [ref=e413]: 20:00
+          - generic [ref=e416]: 21:00
+        - generic [ref=e418]:
+          - generic [ref=e420]: Mo 11.
+          - generic [ref=e422]: Di 12.
+          - generic [ref=e424]: Mi 13.
+          - generic [ref=e426]: Do 14.
+          - generic [ref=e428]: Fr 15.
+          - generic [ref=e430]: Sa 16.
+          - generic [ref=e432]: So 17.
+          - button "Release Retro" [ref=e435]:
+            - generic "Release Retro" [ref=e436] [cursor=pointer]:
+              - generic [ref=e437]: 15:09
+              - generic [ref=e438]: Release Retro
+            - button [ref=e439]
+            - button [ref=e440]
+          - button "Produkt Demo" [ref=e443]:
+            - generic "Produkt Demo" [ref=e444] [cursor=pointer]:
+              - generic [ref=e445]: 13:29
+              - generic [ref=e446]: Produkt Demo
+            - button [ref=e447]
+            - button [ref=e448]
+          - generic [ref=e454] [cursor=pointer]:
+            - button "Partner Sync" [ref=e455]:
+              - generic "Partner Sync" [ref=e456]:
+                - generic [ref=e457]: 07:30
+                - generic [ref=e458]: Partner Sync
+              - button [ref=e459]
+              - button [ref=e460]
+            - 'button "Warnung: Invoice Review" [ref=e461]':
+              - 'generic "Warnung: Invoice Review" [ref=e462]':
+                - generic [ref=e463]: 08:11
+                - generic [ref=e464]: Invoice Review
+              - button [ref=e465]
+              - button [ref=e466]
+            - 'button "Fehler: Customer Integration" [ref=e467]':
+              - 'generic "Fehler: Customer Integration" [ref=e468]':
+                - generic [ref=e469]: 09:38
+                - generic [ref=e470]: Customer Integration
+              - button [ref=e471]
+              - button [ref=e472]
+            - 'button "Warnung: Metrics Review" [ref=e473]':
+              - 'generic "Warnung: Metrics Review" [ref=e474]':
+                - generic [ref=e475]: 10:10
+                - generic [ref=e476]: Metrics Review
+              - button [ref=e477]
+              - button [ref=e478]
+            - 'button "Fehler: Support Handoff" [ref=e479]':
+              - 'generic "Fehler: Support Handoff" [ref=e480]':
+                - generic [ref=e481]: 11:20
+                - generic [ref=e482]: Support Handoff
+              - button [ref=e483]
+              - button [ref=e484]
+            - button "API Contract Review" [ref=e485]:
+              - generic "API Contract Review" [ref=e486]:
+                - generic [ref=e487]: 14:15
+                - generic [ref=e488]: API Contract Review
+              - button [ref=e489]
+              - button [ref=e490]
+            - 'button "Warnung: Focus Buffer" [ref=e491]':
+              - 'generic "Warnung: Focus Buffer" [ref=e492]':
+                - generic [ref=e493]: 15:30
+                - generic [ref=e494]: Focus Buffer
+              - button [ref=e495]
+              - button [ref=e496]
+            - button "Admin Sweep" [ref=e497]:
+              - generic "Admin Sweep" [ref=e498]:
+                - generic [ref=e499]: 17:00
+                - generic [ref=e500]: Admin Sweep
+              - button [ref=e501]
+              - button [ref=e502]
+          - button "Code Review Batch" [ref=e505]:
+            - generic "Code Review Batch" [ref=e506] [cursor=pointer]:
+              - generic [ref=e507]: 16:17
+              - generic [ref=e508]: Code Review Batch
+            - button [ref=e509]
+            - button [ref=e510]
+    - status [ref=e357]
