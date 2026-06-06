@@ -44,13 +44,13 @@ CalendarRoot
 ├─ children
 │  └─ usually CalendarTopbar with controls using useCalendar()
 └─ CalendarGrid
-   ├─ Month view
+   ├─ CalendarMonthView
    │  ├─ optional Row Header Gutter
    │  └─ CalendarCell
    │     ├─ CalendarCellHeader
    │     └─ CalendarEntry
    │        └─ CalendarItem
-   └─ Week view
+   └─ CalendarWeekView
       ├─ Row Header Gutter
       └─ day columns
          └─ CalendarEntry
@@ -72,12 +72,13 @@ Core behaviour is intentionally concentrated behind a few package-internal Modul
 - `utils/views.js`: owns view constants, visible dates, titles, and navigation intervals
 - `useCalendarState.js`: owns controlled/uncontrolled state and derived calendar state
 - `utils/slots.js`: owns default slot resolution, slot prop lookup, and slot-facing `ownerState`, including Row Header state
+- `utils/rowHeaders.js`: owns Row Header visibility resolution for view renderers
 
-`CalendarGrid` remains the render switch between month and week views. View data behaviour belongs in `utils/views.js`; view rendering stays in `CalendarGrid.jsx` until a third view makes a rendering seam worth introducing.
+`CalendarGrid` remains the render switch between month and week views. View data behaviour belongs in `utils/views.js`; view-specific rendering lives in `CalendarMonthView.jsx` and `CalendarWeekView.jsx` so inactive view work is not constructed.
 
 ## Data Model
 
-Calendar entries are plain objects. `CalendarGrid` normalizes incoming entries before rendering so internal calendar Modules receive Day.js values for date work.
+Calendar entries are plain objects. The active view renderer normalizes incoming entries before rendering so internal calendar Modules receive Day.js values for date work.
 
 ```js
 {
@@ -240,7 +241,7 @@ Default behavior:
 
 ## CalendarGrid
 
-`CalendarGrid` renders either month view or week view. Most consumers should use it through `CalendarRoot` instead of directly.
+`CalendarGrid` owns the scroll container and renders either `CalendarMonthView` or `CalendarWeekView`. Most consumers should use it through `CalendarRoot` instead of directly.
 
 Location: `src/components/calendar/CalendarGrid.jsx`
 
@@ -266,6 +267,7 @@ Scroll behavior:
 
 - The grid container uses `overflow: auto`, `flex: 1`, `minHeight: 0`, and `height: 0`.
 - Parent containers must provide a real bounded height.
+- View-specific rendering lives in `src/components/calendar/CalendarMonthView.jsx` and `src/components/calendar/CalendarWeekView.jsx`.
 
 ## Month View
 
@@ -892,10 +894,11 @@ function CustomCalendarItem({ item, layout, sx, ...props }) {
 - Keep title, visible-date, and navigation behaviour in `src/components/calendar/utils/views.js`.
 - Preserve controlled and uncontrolled behavior for root state props.
 - Preserve internal scrolling in `CalendarGrid`; do not move calendar scrolling to the page body.
+- Keep `CalendarGrid` as a small active-view switch; put month and week rendering in their explicit view components.
 - Use `src/lib/dayjs.js` for package date work.
 - Treat month and week views as different layout modes sharing the same entry data model.
 - When adding new slot props, keep default slots working and document the new prop shape here.
-- If adding new views, extend `CALENDAR_VIEWS`, `utils/views.js`, any date-range utilities, `CalendarGrid` rendering, docs, and tests together.
+- If adding new views, extend `CALENDAR_VIEWS`, `utils/views.js`, any date-range utilities, `CalendarGrid` rendering, explicit view components, docs, and tests together.
 
 ## Tests
 

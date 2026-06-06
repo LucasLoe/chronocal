@@ -99,13 +99,6 @@ export function createWeekEntryTimeInteraction({
 	};
 }
 
-export function hasWeekEntryTimeInteractionMoved({ interaction, event, threshold = 2 }) {
-	return (
-		Math.abs(event.clientX - interaction.pointerStartX) > threshold ||
-		Math.abs(event.clientY - interaction.pointerStartY) > threshold
-	);
-}
-
 export function createWeekEntryTimeChange({
 	interaction,
 	date,

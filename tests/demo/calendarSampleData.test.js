@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calendarSampleEntries, getPalePastelColor } from "./calendarSampleData";
+import { calendarSampleEntries, getPalePastelColor } from "../../src/demo/calendarSampleData";
 
 describe("calendar sample data colors", () => {
 	it("maps the same project type to the same pale pastel color", () => {

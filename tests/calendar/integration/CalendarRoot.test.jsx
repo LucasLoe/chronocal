@@ -1,9 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { CalendarRoot } from "./CalendarRoot";
-import { useCalendarExternalDragSource } from "./utils/calendarDnd";
-import { useCalendar } from "./useCalendar";
-import { CALENDAR_VIEWS } from "./utils/views";
+import { CalendarRoot } from "../../../src/components/calendar/CalendarRoot";
+import { useCalendar } from "../../../src/components/calendar/useCalendar";
+import { useCalendarExternalDragSource } from "../../../src/components/calendar/utils/calendarDnd";
+import { CALENDAR_VIEWS } from "../../../src/components/calendar/utils/views";
 
 function TestItem({ item, ownerState }) {
 	return (

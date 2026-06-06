@@ -18,7 +18,7 @@ No project `CONTEXT.md`, `LANGUAGE.md`, or ADR files were present during review,
 
 ## 2. Deepen The Calendar Entry Data Model Module
 
-**Files**: `src/components/calendar/CalendarRoot.jsx`, `src/components/calendar/CalendarGrid.jsx`, `src/components/calendar/CalendarItem.jsx`, `src/components/calendar/calendar.types.js`, `CALENDAR_PACKAGE.md`
+**Files**: `src/components/calendar/CalendarRoot.jsx`, `src/components/calendar/CalendarGrid.jsx`, `src/components/calendar/CalendarItem.jsx`, `CALENDAR_PACKAGE.md`
 
 **Problem**: The documented Interface accepts Day.js values, strings, and `Date` objects for `start`, but the default item renderer assumes `start.format(...)` exists. That mismatch is documented in `CALENDAR_PACKAGE.md`, but the Implementation leaks it to callers. Callers must either know this hidden invariant or provide a custom item Adapter.
 

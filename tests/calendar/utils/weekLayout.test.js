@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import dayjs from "../../../lib/dayjs";
-import { normalizeCalendarEntries } from "./entries";
-import { getWeekEntryLayouts } from "./weekLayout";
+import dayjs from "../../../src/lib/dayjs";
+import { normalizeCalendarEntries } from "../../../src/components/calendar/utils/entries";
+import { getWeekEntryLayouts } from "../../../src/components/calendar/utils/weekLayout";
 
 const workHours = { startHour: 9, endHour: 17 };
 const date = dayjs("2026-05-18T00:00:00");

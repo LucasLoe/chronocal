@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import dayjs from "../../../lib/dayjs";
+import dayjs from "../../../src/lib/dayjs";
 import {
 	DEFAULT_TIME_SLOT_MINUTES,
 	getWeekTimeSlot,
 	normalizeTimeSlotMinutes,
-} from "./timeSlots";
+} from "../../../src/components/calendar/utils/timeSlots";
 
 describe("time slots", () => {
 	it("normalizes unsupported time slot minute values", () => {

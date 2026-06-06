@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createCalendarItemClickHandler } from "./itemEvents";
+import { createCalendarItemClickHandler } from "../../../src/components/calendar/utils/itemEvents";
 
 describe("item events", () => {
 	it("stops propagation before running slot and root item click callbacks", () => {

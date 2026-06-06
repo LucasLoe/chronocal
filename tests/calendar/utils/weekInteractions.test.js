@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import dayjs from "../../../lib/dayjs";
+import dayjs from "../../../src/lib/dayjs";
 import {
 	createWeekEntryTimeChange,
 	createWeekEntryTimeInteraction,
@@ -8,7 +8,7 @@ import {
 	createWeekTimeSlotClickPayload,
 	isSameHoveredWeekTimeSlot,
 	WEEK_ENTRY_TIME_ACTIONS,
-} from "./weekInteractions";
+} from "../../../src/components/calendar/utils/weekInteractions";
 
 const workHours = { startHour: 6, endHour: 22 };
 const date = dayjs("2026-05-18");

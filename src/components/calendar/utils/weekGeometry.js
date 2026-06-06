@@ -32,10 +32,6 @@ function clamp(value, min, max) {
 	return Math.min(Math.max(value, min), max);
 }
 
-export function getWeekDateAtPointer({ event, gridElement, dates }) {
-	return getWeekDateAtPoint({ point: event, gridElement, dates });
-}
-
 export function getWeekDateAtPoint({ point, gridElement, dates }) {
 	const rect = gridElement.getBoundingClientRect();
 	const columnWidth = rect.width / dates.length;

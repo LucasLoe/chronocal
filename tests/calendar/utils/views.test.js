@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import dayjs from "../../../lib/dayjs";
-import { CALENDAR_VIEWS, formatToolbarTitle, getNextAnchorDate, getVisibleDates } from "./views";
+import dayjs from "../../../src/lib/dayjs";
+import {
+	CALENDAR_VIEWS,
+	formatToolbarTitle,
+	getNextAnchorDate,
+	getVisibleDates,
+} from "../../../src/components/calendar/utils/views";
 
 describe("calendar view behaviour", () => {
 	it("returns only weeks that intersect the month view", () => {

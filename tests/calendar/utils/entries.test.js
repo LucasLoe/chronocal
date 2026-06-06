@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import dayjs from "../../../lib/dayjs";
-import { getCalendarEntryEnd, normalizeCalendarEntry } from "./entries";
+import dayjs from "../../../src/lib/dayjs";
+import { getCalendarEntryEnd, normalizeCalendarEntry } from "../../../src/components/calendar/utils/entries";
 
 describe("calendar entry normalization", () => {
 	it("normalizes string date fields to Day.js values", () => {
