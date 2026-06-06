@@ -52,15 +52,15 @@ No project `CONTEXT.md`, `LANGUAGE.md`, or ADR files were present during review,
 
 **Benefits**: This improves **locality** for controlled/uncontrolled behaviour and callback sequencing. It improves **leverage** because navigation, today, work-hour resolution, and visible-date derivation can be tested through one Interface. Tests become less tied to MUI rendering and more focused on calendar state invariants.
 
-## 5. Deepen The Slot Contract Module
+## 5. Keep Slot Contracts Explicit
 
-**Files**: `src/components/calendar/CalendarRoot.jsx`, `src/components/calendar/CalendarCell.jsx`, `src/components/calendar/CalendarGrid.jsx`, `src/components/calendar/CalendarEntry.jsx`, `src/components/calendar/CalendarItem.jsx`, `src/components/calendar/utils/slots.js`, `CALENDAR_PACKAGE.md`
+**Files**: `src/components/calendar/CalendarRoot.jsx`, `src/components/calendar/CalendarCell.jsx`, `src/components/calendar/CalendarGrid.jsx`, `src/components/calendar/CalendarEntry.jsx`, `src/components/calendar/CalendarItem.jsx`, `CALENDAR_PACKAGE.md`
 
 **Problem**: Slots are the strongest real seam in the package, but their `ownerState`, `item`, `entry`, and `layout` shapes are assembled in multiple places. Month item state and week item state are built separately. The slot Interface is documented, but the Implementation is duplicated and easy to drift.
 
-**Solution**: Concentrate slot prop assembly into a deeper Module that owns the slot contract for month and week views.
+**Solution**: Keep slot prop assembly explicit at the render seam for month and week views.
 
-**Status**: Implemented in `src/components/calendar/utils/slots.js` and covered at the rendered seam by `src/components/calendar/CalendarRoot.test.jsx`.
+**Status**: Covered at the rendered seam by `src/components/calendar/CalendarRoot.test.jsx`.
 
 **Benefits**: This improves **locality** because changing slot data shape happens in one place. It improves **leverage** because custom item Adapters receive consistent facts across views. Tests can check the slot Interface directly instead of snapshotting large render trees.
 

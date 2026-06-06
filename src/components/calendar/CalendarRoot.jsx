@@ -1,12 +1,31 @@
 import { Box } from "@mui/material";
+import { styled, useThemeProps } from "@mui/material/styles";
 import { CalendarContext } from "./calendarContext";
+import { CalendarCellHeader } from "./CalendarCellHeader";
+import { CalendarEntry } from "./CalendarEntry";
 import { CalendarGrid } from "./CalendarGrid";
+import { CalendarItem } from "./CalendarItem";
+import { CalendarRowHeader } from "./CalendarRowHeader";
+import { CalendarTimeSlotIndicator } from "./CalendarTimeSlotIndicator";
 import { useCalendarState } from "./useCalendarState";
-import { resolveCalendarSlots } from "./utils/slots";
 import { CALENDAR_VIEWS } from "./utils/views";
 import { WORK_HOUR_PRESETS } from "./utils/dateRange";
 
-export function CalendarRoot({
+const CalendarRootRoot = styled(Box, {
+	name: "CALENDAR_CalendarRoot",
+	slot: "Root",
+})({
+	display: "flex",
+	flexDirection: "column",
+	flex: 1,
+	height: "100%",
+	minHeight: 0,
+	overflow: "hidden",
+});
+
+export function CalendarRoot(inProps) {
+	const props = useThemeProps({ props: inProps, name: "CALENDAR_CalendarRoot" });
+	const {
 	entries = [],
 	view: viewProp,
 	date: dateProp,
@@ -34,7 +53,7 @@ export function CalendarRoot({
 	gridSx,
 	sx,
 	...rest
-}) {
+	} = props;
 	const calendarState = useCalendarState({
 		view: viewProp,
 		date: dateProp,
@@ -52,7 +71,14 @@ export function CalendarRoot({
 		defaultWorkHourPreset,
 		defaultTimeSlotMinutes,
 	});
-	const resolvedSlots = resolveCalendarSlots(slots);
+	const resolvedSlots = {
+		cellHeader: CalendarCellHeader,
+		entry: CalendarEntry,
+		item: CalendarItem,
+		rowHeader: CalendarRowHeader,
+		timeSlotIndicator: CalendarTimeSlotIndicator,
+		...slots,
+	};
 	const calendar = {
 		...calendarState,
 		slots: resolvedSlots,
@@ -64,17 +90,7 @@ export function CalendarRoot({
 
 	return (
 		<CalendarContext.Provider value={calendar}>
-			<Box
-				sx={{
-					display: "flex",
-					flexDirection: "column",
-					flex: 1,
-					height: "100%",
-					minHeight: 0,
-					overflow: "hidden",
-					...sx,
-				}}
-			>
+			<CalendarRootRoot sx={sx}>
 				{children}
 				<CalendarGrid
 					view={calendarState.view}
@@ -94,7 +110,7 @@ export function CalendarRoot({
 					sx={gridSx}
 					{...rest}
 				/>
-			</Box>
+			</CalendarRootRoot>
 		</CalendarContext.Provider>
 	);
 }

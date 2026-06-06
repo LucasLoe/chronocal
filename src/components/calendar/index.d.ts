@@ -152,13 +152,51 @@ export interface CalendarSlots {
 	timeSlotIndicator?: ComponentType<CalendarTimeSlotIndicatorProps>;
 }
 
+export interface CalendarNativeSlotProps {
+	sx?: SxProps<Theme>;
+	[key: string]: unknown;
+}
+
 export interface CalendarSlotProps {
 	cellHeader?: Partial<CalendarCellHeaderProps>;
 	entry?: Partial<CalendarEntryProps>;
 	item?: Partial<CalendarItemProps>;
+	monthCorner?: CalendarNativeSlotProps;
+	monthItemWrapper?: CalendarNativeSlotProps;
+	monthRoot?: CalendarNativeSlotProps;
+	monthRowHeaderGutter?: CalendarNativeSlotProps;
+	monthWeekdayHeader?: CalendarNativeSlotProps;
+	monthWeekdayLabel?: CalendarNativeSlotProps;
 	rowHeader?: Partial<CalendarRowHeaderProps>;
 	timeSlotIndicator?: Partial<CalendarTimeSlotIndicatorProps>;
+	weekColumn?: CalendarNativeSlotProps;
+	weekContent?: CalendarNativeSlotProps;
+	weekDraggableEntry?: CalendarNativeSlotProps;
+	weekEntryTimePreview?: CalendarNativeSlotProps;
+	weekEntryTimePreviewLabel?: CalendarNativeSlotProps;
+	weekGrid?: CalendarNativeSlotProps;
+	weekHeader?: CalendarNativeSlotProps;
+	weekHeaderLabel?: CalendarNativeSlotProps;
+	weekResizeHandle?: CalendarNativeSlotProps;
+	weekRoot?: CalendarNativeSlotProps;
+	weekRowHeaderCell?: CalendarNativeSlotProps;
+	weekRowHeaderCorner?: CalendarNativeSlotProps;
+	weekRowHeaderGutter?: CalendarNativeSlotProps;
+	weekTimeSlotLayer?: CalendarNativeSlotProps;
 }
+
+export type CalendarThemeComponentName =
+	| "CALENDAR_CalendarCell"
+	| "CALENDAR_CalendarCellHeader"
+	| "CALENDAR_CalendarEntry"
+	| "CALENDAR_CalendarGrid"
+	| "CALENDAR_CalendarItem"
+	| "CALENDAR_CalendarMonthView"
+	| "CALENDAR_CalendarRoot"
+	| "CALENDAR_CalendarRowHeader"
+	| "CALENDAR_CalendarTimeSlotIndicator"
+	| "CALENDAR_CalendarTopbar"
+	| "CALENDAR_CalendarWeekView";
 
 export interface TimeSlotClickPayload {
 	start: Dayjs;

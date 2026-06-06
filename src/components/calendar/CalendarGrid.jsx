@@ -1,9 +1,23 @@
 import { Box } from "@mui/material";
+import { styled, useThemeProps } from "@mui/material/styles";
 import { CalendarMonthView } from "./CalendarMonthView";
 import { CalendarWeekView } from "./CalendarWeekView";
 import { CALENDAR_VIEWS } from "./utils/views";
 
-export function CalendarGrid({
+const CalendarGridRoot = styled(Box, {
+	name: "CALENDAR_CalendarGrid",
+	slot: "Root",
+})({
+	overflow: "auto",
+	flex: 1,
+	minHeight: 0,
+	height: 0,
+	width: "100%",
+});
+
+export function CalendarGrid(inProps) {
+	const props = useThemeProps({ props: inProps, name: "CALENDAR_CalendarGrid" });
+	const {
 	view,
 	dates,
 	anchorDate,
@@ -21,12 +35,10 @@ export function CalendarGrid({
 	cellSx,
 	sx,
 	...rest
-}) {
+	} = props;
+
 	return (
-		<Box
-			sx={{ overflow: "auto", flex: 1, minHeight: 0, height: 0, width: "100%", ...sx }}
-			{...rest}
-		>
+		<CalendarGridRoot sx={sx} {...rest}>
 			{view === CALENDAR_VIEWS.MONTH ? (
 				<CalendarMonthView
 					anchorDate={anchorDate}
@@ -57,6 +69,6 @@ export function CalendarGrid({
 					workHours={workHours}
 				/>
 			)}
-		</Box>
+		</CalendarGridRoot>
 	);
 }

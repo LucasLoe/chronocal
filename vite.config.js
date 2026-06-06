@@ -20,6 +20,7 @@ export default defineConfig(({ command, mode }) => {
               "@emotion/react",
               "@emotion/styled",
               "@mui/material",
+              "@mui/material/styles",
               "dayjs",
               "dayjs/locale/de",
               "dayjs/plugin/isoWeek",

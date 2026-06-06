@@ -1,11 +1,11 @@
 import { Box, Typography } from "@mui/material";
+import { styled, useThemeProps } from "@mui/material/styles";
 import dayjs from "../../lib/dayjs";
 import { CalendarCell } from "./CalendarCell";
 import { getEntriesForDate, getWeekdayLabels, isSameDay } from "./utils/dateRange";
 import { normalizeCalendarEntries } from "./utils/entries";
 import { chunkDates } from "./utils/layout";
 import { shouldRenderRowHeaders } from "./utils/rowHeaders";
-import { createRowHeaderOwnerState } from "./utils/slots";
 import { CALENDAR_VIEWS } from "./utils/views";
 import { ROW_HEADER_GUTTER_WIDTH } from "./utils/weekGeometry";
 
@@ -16,7 +16,89 @@ const STICKY_ROW_HEADER_Z_INDEX = 4;
 const STICKY_COLUMN_HEADER_Z_INDEX = 5;
 const STICKY_CORNER_Z_INDEX = 6;
 
-export function CalendarMonthView({
+const CalendarMonthViewRoot = styled(Box, {
+	name: "CALENDAR_CalendarMonthView",
+	slot: "Root",
+})(({ theme, ownerState }) => ({
+	width: "100%",
+	height: "100%",
+	minWidth: ownerState.monthGridMinWidth,
+	minHeight: ownerState.monthGridMinHeight,
+	display: "grid",
+	gridTemplateColumns: ownerState.showMonthRowHeaders
+		? `${ROW_HEADER_GUTTER_WIDTH}px repeat(${ownerState.columnCount}, minmax(0, 1fr))`
+		: `repeat(${ownerState.columnCount}, minmax(0, 1fr))`,
+	gridTemplateRows: `${MONTH_WEEKDAY_HEADER_HEIGHT}px repeat(${ownerState.monthRowCount}, minmax(0, 1fr))`,
+	borderTop: "1px solid",
+	borderLeft: "1px solid",
+	borderColor: theme.palette.divider,
+}));
+
+const CalendarMonthCorner = styled(Box, {
+	name: "CALENDAR_CalendarMonthView",
+	slot: "Corner",
+	overridesResolver: (props, styles) => styles.corner,
+})(({ theme }) => ({
+	position: "sticky",
+	top: 0,
+	left: 0,
+	zIndex: STICKY_CORNER_Z_INDEX,
+	borderRight: "1px solid",
+	borderBottom: "1px solid",
+	borderColor: theme.palette.divider,
+	backgroundColor: theme.palette.background.default,
+	boxSizing: "border-box",
+}));
+
+const CalendarMonthWeekdayHeader = styled(Box, {
+	name: "CALENDAR_CalendarMonthView",
+	slot: "WeekdayHeader",
+	overridesResolver: (props, styles) => styles.weekdayHeader,
+})(({ theme }) => ({
+	position: "sticky",
+	top: 0,
+	zIndex: STICKY_COLUMN_HEADER_Z_INDEX,
+	paddingLeft: theme.spacing(1.25),
+	paddingRight: theme.spacing(1.25),
+	height: MONTH_WEEKDAY_HEADER_HEIGHT,
+	borderRight: "1px solid",
+	borderBottom: "1px solid",
+	borderColor: theme.palette.divider,
+	boxSizing: "border-box",
+	display: "flex",
+	alignItems: "center",
+	backgroundColor: theme.palette.background.default,
+}));
+
+const CalendarMonthWeekdayLabel = styled(Typography, {
+	name: "CALENDAR_CalendarMonthView",
+	slot: "WeekdayLabel",
+	overridesResolver: (props, styles) => styles.weekdayLabel,
+})(({ theme }) => ({
+	fontWeight: 700,
+	color: theme.palette.text.secondary,
+}));
+
+const CalendarMonthRowHeaderGutter = styled(Box, {
+	name: "CALENDAR_CalendarMonthView",
+	slot: "RowHeaderGutter",
+	overridesResolver: (props, styles) => styles.rowHeaderGutter,
+})(({ theme }) => ({
+	position: "sticky",
+	left: 0,
+	zIndex: STICKY_ROW_HEADER_Z_INDEX,
+	borderRight: "1px solid",
+	borderBottom: "1px solid",
+	borderColor: theme.palette.divider,
+	boxSizing: "border-box",
+	minHeight: 0,
+	overflow: "hidden",
+	backgroundColor: theme.palette.background.paper,
+}));
+
+export function CalendarMonthView(inProps) {
+	const props = useThemeProps({ props: inProps, name: "CALENDAR_CalendarMonthView" });
+	const {
 	anchorDate,
 	cellSx,
 	dates,
@@ -27,7 +109,7 @@ export function CalendarMonthView({
 	slots,
 	slotProps = {},
 	view = CALENDAR_VIEWS.MONTH,
-}) {
+	} = props;
 	const weekdayLabels = getWeekdayLabels({ showWeekend });
 	const columnCount = showWeekend ? 7 : 5;
 	const RowHeader = slots.rowHeader;
@@ -38,107 +120,86 @@ export function CalendarMonthView({
 	const firstMonthRow = monthRows[0] || [];
 	const firstMonthRowStart = firstMonthRow[0];
 	const firstMonthRowEnd = firstMonthRow.at(-1)?.add(1, "day");
-	const showMonthRowHeaders = shouldRenderRowHeaders(
-		showRowHeaders,
-		createRowHeaderOwnerState({
-			view: CALENDAR_VIEWS.MONTH,
-			rowIndex: 0,
-			rowStart: firstMonthRowStart,
-			rowEnd: firstMonthRowEnd,
-			dates: firstMonthRow,
-		}),
-	);
+	const showMonthRowHeaders = shouldRenderRowHeaders(showRowHeaders, {
+		view: CALENDAR_VIEWS.MONTH,
+		rowIndex: 0,
+		rowStart: firstMonthRowStart,
+		rowEnd: firstMonthRowEnd,
+		dates: firstMonthRow,
+	});
 	const monthGridMinWidth =
 		columnCount * MONTH_CELL_MIN_WIDTH + (showMonthRowHeaders ? ROW_HEADER_GUTTER_WIDTH : 0);
 	const monthGridMinHeight = MONTH_WEEKDAY_HEADER_HEIGHT + monthRows.length * MONTH_CELL_MIN_HEIGHT;
+	const monthViewOwnerState = {
+		columnCount,
+		monthGridMinHeight,
+		monthGridMinWidth,
+		monthRowCount: monthRows.length,
+		showMonthRowHeaders,
+		view,
+	};
+	const { sx: monthRootSx, ...monthRootSlotRest } = slotProps.monthRoot || {};
+	const { sx: monthCornerSx, ...monthCornerSlotRest } = slotProps.monthCorner || {};
+	const { sx: monthWeekdayHeaderSx, ...monthWeekdayHeaderSlotRest } =
+		slotProps.monthWeekdayHeader || {};
+	const { sx: monthWeekdayLabelSx, ...monthWeekdayLabelSlotRest } =
+		slotProps.monthWeekdayLabel || {};
+	const { sx: monthRowHeaderGutterSx, ...monthRowHeaderGutterSlotRest } =
+		slotProps.monthRowHeaderGutter || {};
 
 	return (
-		<Box
+		<CalendarMonthViewRoot
 			data-calendar-month-grid='true'
-			sx={{
-				width: "100%",
-				height: "100%",
-				minWidth: monthGridMinWidth,
-				minHeight: monthGridMinHeight,
-				display: "grid",
-				gridTemplateColumns: showMonthRowHeaders
-					? `${ROW_HEADER_GUTTER_WIDTH}px repeat(${columnCount}, minmax(0, 1fr))`
-					: `repeat(${columnCount}, minmax(0, 1fr))`,
-				gridTemplateRows: `${MONTH_WEEKDAY_HEADER_HEIGHT}px repeat(${monthRows.length}, minmax(0, 1fr))`,
-				borderTop: "1px solid",
-				borderLeft: "1px solid",
-				borderColor: "divider",
-			}}
+			ownerState={monthViewOwnerState}
+			sx={monthRootSx}
+			{...monthRootSlotRest}
 		>
 			{showMonthRowHeaders && (
-				<Box
+				<CalendarMonthCorner
 					data-calendar-month-corner='true'
-					sx={{
-						position: "sticky",
-						top: 0,
-						left: 0,
-						zIndex: STICKY_CORNER_Z_INDEX,
-						borderRight: "1px solid",
-						borderBottom: "1px solid",
-						borderColor: "divider",
-						backgroundColor: "background.default",
-						boxSizing: "border-box",
-					}}
+					ownerState={monthViewOwnerState}
+					sx={monthCornerSx}
+					{...monthCornerSlotRest}
 				/>
 			)}
 			{weekdayLabels.map((label) => (
-				<Box
+				<CalendarMonthWeekdayHeader
 					key={label}
 					data-calendar-month-weekday-header={label}
-					sx={{
-						position: "sticky",
-						top: 0,
-						zIndex: STICKY_COLUMN_HEADER_Z_INDEX,
-						px: 1.25,
-						height: MONTH_WEEKDAY_HEADER_HEIGHT,
-						borderRight: "1px solid",
-						borderBottom: "1px solid",
-						borderColor: "divider",
-						boxSizing: "border-box",
-						display: "flex",
-						alignItems: "center",
-						backgroundColor: "background.default",
-					}}
+					ownerState={{ ...monthViewOwnerState, label }}
+					sx={monthWeekdayHeaderSx}
+					{...monthWeekdayHeaderSlotRest}
 				>
-					<Typography variant='caption' sx={{ fontWeight: 700, color: "text.secondary" }}>
+					<CalendarMonthWeekdayLabel
+						variant='caption'
+						ownerState={{ ...monthViewOwnerState, label }}
+						sx={monthWeekdayLabelSx}
+						{...monthWeekdayLabelSlotRest}
+					>
 						{label}
-					</Typography>
-				</Box>
+					</CalendarMonthWeekdayLabel>
+				</CalendarMonthWeekdayHeader>
 			))}
 
 			{monthRows.map((rowDates, rowIndex) => {
 				const rowStart = rowDates[0];
 				const rowEnd = rowDates.at(-1).add(1, "day");
-				const ownerState = createRowHeaderOwnerState({
+				const ownerState = {
 					view: CALENDAR_VIEWS.MONTH,
 					rowIndex,
 					rowStart,
 					rowEnd,
 					dates: rowDates,
-				});
+				};
 
 				return [
 					showMonthRowHeaders && (
-						<Box
+						<CalendarMonthRowHeaderGutter
 							key={`row-header-${rowStart.format("YYYY-MM-DD")}`}
 							data-calendar-month-row-header={rowStart.format("YYYY-MM-DD")}
-							sx={{
-								position: "sticky",
-								left: 0,
-								zIndex: STICKY_ROW_HEADER_Z_INDEX,
-								borderRight: "1px solid",
-								borderBottom: "1px solid",
-								borderColor: "divider",
-								boxSizing: "border-box",
-								minHeight: 0,
-								overflow: "hidden",
-								backgroundColor: "background.paper",
-							}}
+							ownerState={ownerState}
+							sx={monthRowHeaderGutterSx}
+							{...monthRowHeaderGutterSlotRest}
 						>
 							<RowHeader
 								view={CALENDAR_VIEWS.MONTH}
@@ -149,7 +210,7 @@ export function CalendarMonthView({
 								ownerState={ownerState}
 								{...rowHeaderSlotProps}
 							/>
-						</Box>
+						</CalendarMonthRowHeaderGutter>
 					),
 					...rowDates.map((date) => (
 						<CalendarCell
@@ -167,6 +228,6 @@ export function CalendarMonthView({
 					)),
 				];
 			})}
-		</Box>
+		</CalendarMonthViewRoot>
 	);
 }

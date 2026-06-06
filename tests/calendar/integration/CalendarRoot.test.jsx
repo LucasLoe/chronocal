@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { describe, expect, it, vi } from "vitest";
 import { CalendarRoot } from "../../../src/components/calendar/CalendarRoot";
 import { useCalendar } from "../../../src/components/calendar/useCalendar";
@@ -312,6 +313,96 @@ describe("CalendarRoot", () => {
 		expect(container.querySelector('[data-calendar-month-row-header="2026-04-27"]')).toHaveStyle({
 			position: "sticky",
 			left: "0px",
+		});
+	});
+
+	it("applies sx to native month and week structural slots", () => {
+		const { container, rerender } = render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.MONTH}
+				date='2026-05-18'
+				entries={[]}
+				slotProps={{
+					monthWeekdayHeader: { sx: { minHeight: 44 } },
+					monthRoot: { sx: { borderTopWidth: 3 } },
+				}}
+			/>,
+		);
+
+		expect(container.querySelector('[data-calendar-month-weekday-header="Mo"]')).toHaveStyle({
+			minHeight: "44px",
+		});
+		expect(container.querySelector('[data-calendar-month-grid="true"]')).toHaveStyle({
+			borderTopWidth: "3px",
+		});
+
+		rerender(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.WEEK}
+				date='2026-05-18'
+				entries={[]}
+				slotProps={{
+					weekColumn: { sx: { outlineStyle: "solid", outlineWidth: 4 } },
+					weekHeader: { sx: { minHeight: 48 } },
+				}}
+			/>,
+		);
+
+		expect(container.querySelector('[data-calendar-week-column="2026-05-18"]')).toHaveStyle({
+			outlineStyle: "solid",
+			outlineWidth: "4px",
+		});
+		expect(container.querySelector('[data-calendar-week-header="2026-05-18"]')).toHaveStyle({
+			minHeight: "48px",
+		});
+	});
+
+	it("applies theme component overrides to CALENDAR-prefixed calendar components", () => {
+		const theme = createTheme({
+			components: {
+				CALENDAR_CalendarItem: {
+					styleOverrides: {
+						root: {
+							borderStyle: "solid",
+							borderWidth: 3,
+						},
+					},
+				},
+				CALENDAR_CalendarWeekView: {
+					styleOverrides: {
+						column: {
+							outlineStyle: "solid",
+							outlineWidth: 5,
+						},
+					},
+				},
+			},
+		});
+
+		const { container } = render(
+			<ThemeProvider theme={theme}>
+				<CalendarRoot
+					view={CALENDAR_VIEWS.WEEK}
+					date='2026-05-18'
+					entries={[
+						{
+							id: "a",
+							title: "Theme Override",
+							start: "2026-05-18T10:00:00",
+							end: "2026-05-18T11:00:00",
+						},
+					]}
+				/>
+			</ThemeProvider>,
+		);
+
+		expect(container.querySelector('[data-calendar-week-column="2026-05-18"]')).toHaveStyle({
+			outlineStyle: "solid",
+			outlineWidth: "5px",
+		});
+		expect(container.querySelector('[data-calendar-week-entry="a"] > div')).toHaveStyle({
+			borderStyle: "solid",
+			borderWidth: "3px",
 		});
 	});
 

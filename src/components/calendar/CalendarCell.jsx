@@ -1,13 +1,36 @@
 import { Box } from "@mui/material";
+import { styled, useThemeProps } from "@mui/material/styles";
 import { createCalendarItemClickHandler } from "./utils/itemEvents";
-import {
-	createMonthCellOwnerState,
-	createMonthItemOwnerState,
-	getSlotProps,
-	splitSlotSx,
-} from "./utils/slots";
 
-export function CalendarCell({
+const CalendarCellRoot = styled(Box, {
+	name: "CALENDAR_CalendarCell",
+	slot: "Root",
+})(({ theme }) => ({
+	display: "flex",
+	flexDirection: "column",
+	minHeight: 116,
+	minWidth: 0,
+	overflow: "hidden",
+	borderRight: "1px solid",
+	borderBottom: "1px solid",
+	borderColor: theme.palette.divider,
+}));
+
+const CalendarCellItemWrapper = styled(Box, {
+	name: "CALENDAR_CalendarCell",
+	slot: "ItemWrapper",
+	overridesResolver: (props, styles) => styles.itemWrapper,
+})({
+	width: "100%",
+	minWidth: 0,
+	"& > *": {
+		width: "100%",
+	},
+});
+
+export function CalendarCell(inProps) {
+	const props = useThemeProps({ props: inProps, name: "CALENDAR_CalendarCell" });
+	const {
 	date,
 	entries,
 	view,
@@ -18,28 +41,20 @@ export function CalendarCell({
 	onItemClick,
 	sx,
 	...rest
-}) {
+	} = props;
 	const CellHeader = slots.cellHeader;
 	const Entry = slots.entry;
 	const Item = slots.item;
-	const ownerState = createMonthCellOwnerState({ date, entries, view, isToday, isCurrentMonth });
-	const cellHeaderSlotProps = getSlotProps(slotProps, "cellHeader");
-	const { sx: entrySx, rest: entrySlotRest } = splitSlotSx(getSlotProps(slotProps, "entry"));
-	const { onClick: itemSlotOnClick, ...itemSlotRest } = getSlotProps(slotProps, "item");
+	const ownerState = { date, entries, view, isToday, isCurrentMonth };
+	const cellHeaderSlotProps = slotProps.cellHeader || {};
+	const { sx: entrySx, ...entrySlotRest } = slotProps.entry || {};
+	const { onClick: itemSlotOnClick, ...itemSlotRest } = slotProps.item || {};
+	const { sx: itemWrapperSx, ...itemWrapperSlotRest } = slotProps.monthItemWrapper || {};
 
 	return (
-		<Box
-			sx={{
-				display: "flex",
-				flexDirection: "column",
-				minHeight: 116,
-				minWidth: 0,
-				overflow: "hidden",
-				borderRight: "1px solid",
-				borderBottom: "1px solid",
-				borderColor: "divider",
-				...sx,
-			}}
+		<CalendarCellRoot
+			ownerState={ownerState}
+			sx={sx}
 			{...rest}
 		>
 			<CellHeader
@@ -58,24 +73,33 @@ export function CalendarCell({
 				sx={{ flex: 1, minHeight: 0, overflow: "auto", ...entrySx }}
 				{...entrySlotRest}
 			>
-				{entries.map((entry) => (
-					<Box key={entry.id} sx={{ width: "100%", minWidth: 0, "& > *": { width: "100%" } }}>
-						<Item
-							item={entry}
-							entry={entry}
-							date={date}
-							view={view}
-							onClick={createCalendarItemClickHandler({
-								item: entry,
-								slotOnClick: itemSlotOnClick,
-								onItemClick,
-							})}
-							ownerState={createMonthItemOwnerState({ cellOwnerState: ownerState, entry })}
-							{...itemSlotRest}
-						/>
-					</Box>
-				))}
+				{entries.map((entry) => {
+					const itemOwnerState = { ...ownerState, item: entry, entry };
+
+					return (
+						<CalendarCellItemWrapper
+							key={entry.id}
+							ownerState={itemOwnerState}
+							sx={itemWrapperSx}
+							{...itemWrapperSlotRest}
+						>
+							<Item
+								item={entry}
+								entry={entry}
+								date={date}
+								view={view}
+								onClick={createCalendarItemClickHandler({
+									item: entry,
+									slotOnClick: itemSlotOnClick,
+									onItemClick,
+								})}
+								ownerState={itemOwnerState}
+								{...itemSlotRest}
+							/>
+						</CalendarCellItemWrapper>
+					);
+				})}
 			</Entry>
-		</Box>
+		</CalendarCellRoot>
 	);
 }

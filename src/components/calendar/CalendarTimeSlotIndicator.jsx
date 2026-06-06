@@ -1,29 +1,41 @@
 import { Box } from "@mui/material";
+import { styled, useThemeProps } from "@mui/material/styles";
 
-export function CalendarTimeSlotIndicator({ timeSlot, sx, ...rest }) {
+const CalendarTimeSlotIndicatorRoot = styled(Box, {
+	name: "CALENDAR_CalendarTimeSlotIndicator",
+	slot: "Root",
+})(({ theme, ownerState }) => ({
+	position: "absolute",
+	top: ownerState.timeSlot.top,
+	left: 0,
+	right: 0,
+	height: ownerState.timeSlot.height,
+	pointerEvents: "none",
+	zIndex: 1,
+	backgroundColor: theme.palette.primary.main,
+	opacity: 0.12,
+	borderTop: "1px solid",
+	borderBottom: "1px solid",
+	borderColor: theme.palette.primary.main,
+	boxSizing: "border-box",
+}));
+
+export function CalendarTimeSlotIndicator(inProps) {
+	const { timeSlot, sx, ...rest } = useThemeProps({
+		props: inProps,
+		name: "CALENDAR_CalendarTimeSlotIndicator",
+	});
+	const ownerState = { ...rest.ownerState, timeSlot };
+
 	delete rest.date;
 	delete rest.view;
 	delete rest.ownerState;
 
 	return (
-		<Box
+		<CalendarTimeSlotIndicatorRoot
 			aria-hidden='true'
-			sx={{
-				position: "absolute",
-				top: timeSlot.top,
-				left: 0,
-				right: 0,
-				height: timeSlot.height,
-				pointerEvents: "none",
-				zIndex: 1,
-				backgroundColor: "primary.main",
-				opacity: 0.12,
-				borderTop: "1px solid",
-				borderBottom: "1px solid",
-				borderColor: "primary.main",
-				boxSizing: "border-box",
-				...sx,
-			}}
+			ownerState={ownerState}
+			sx={sx}
 			{...rest}
 		/>
 	);

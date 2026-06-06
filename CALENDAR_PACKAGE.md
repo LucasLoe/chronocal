@@ -71,7 +71,6 @@ Core behaviour is intentionally concentrated behind a few package-internal Modul
 - `utils/itemEvents.js`: owns item click callback ordering and propagation handling
 - `utils/views.js`: owns view constants, visible dates, titles, and navigation intervals
 - `useCalendarState.js`: owns controlled/uncontrolled state and derived calendar state
-- `utils/slots.js`: owns default slot resolution, slot prop lookup, and slot-facing `ownerState`, including Row Header state
 - `utils/rowHeaders.js`: owns Row Header visibility resolution for view renderers
 
 `CalendarGrid` remains the render switch between month and week views. View data behaviour belongs in `utils/views.js`; view-specific rendering lives in `CalendarMonthView.jsx` and `CalendarWeekView.jsx` so inactive view work is not constructed.
@@ -86,7 +85,6 @@ Calendar entries are plain objects. The active view renderer normalizes incoming
   title: "Deep Work: Calendar Refactor",
   start: "2026-05-18T08:57:00",
   end: "2026-05-18T12:46:00",
-  color: "#ccfbf1",
   category: "Fokus"
 }
 ```
@@ -100,7 +98,7 @@ Required fields:
 Optional fields:
 
 - `end`: Day.js value, ISO string, or `Date`; week view defaults missing end values to one hour after `start`
-- `color`: used by the default `CalendarItem` background
+- `color`: optional consumer-provided value used by the default `CalendarItem` background
 - `category`: not used by package primitives, used by the demo time-tracking filter
 - Any extra consumer-specific fields are preserved and passed to slots
 
@@ -116,7 +114,7 @@ Default-renderer behavior:
 
 Location: `src/components/calendar/CalendarRoot.jsx`
 
-State transition logic lives in `src/components/calendar/useCalendarState.js`. `CalendarRoot` uses that module, resolves slots through `src/components/calendar/utils/slots.js`, provides context, and renders `CalendarGrid`.
+State transition logic lives in `src/components/calendar/useCalendarState.js`. `CalendarRoot` uses that module, resolves default slots, provides context, and renders `CalendarGrid`.
 
 ### Props
 
@@ -407,7 +405,7 @@ function CustomTimeSlotIndicator({ date, view, timeSlot, ownerState, sx, ...prop
 
 ## Slots And Slot Props
 
-Default slots are resolved by `resolveCalendarSlots()` in `src/components/calendar/utils/slots.js`:
+Default slots are resolved in `CalendarRoot`:
 
 ```js
 const resolvedSlots = {
@@ -427,6 +425,28 @@ Supported slots:
 - `item`: replaces `CalendarItem`
 - `rowHeader`: replaces `CalendarRowHeader` in Row Header Gutters
 - `timeSlotIndicator`: replaces `CalendarTimeSlotIndicator` in week view
+
+Native structural slot props:
+
+- Month keys: `monthRoot`, `monthCorner`, `monthWeekdayHeader`, `monthWeekdayLabel`, `monthRowHeaderGutter`, `monthItemWrapper`
+- Week keys: `weekRoot`, `weekContent`, `weekGrid`, `weekHeader`, `weekHeaderLabel`, `weekColumn`, `weekEntryTimePreview`, `weekEntryTimePreviewLabel`, `weekTimeSlotLayer`, `weekDraggableEntry`, `weekResizeHandle`, `weekRowHeaderGutter`, `weekRowHeaderCorner`, `weekRowHeaderCell`
+- These keys accept at least `sx` and are forwarded to the package-owned native MUI element for that slot.
+
+Theme component names:
+
+- `CALENDAR_CalendarRoot`
+- `CALENDAR_CalendarGrid`
+- `CALENDAR_CalendarTopbar`
+- `CALENDAR_CalendarMonthView`
+- `CALENDAR_CalendarWeekView`
+- `CALENDAR_CalendarCell`
+- `CALENDAR_CalendarCellHeader`
+- `CALENDAR_CalendarEntry`
+- `CALENDAR_CalendarItem`
+- `CALENDAR_CalendarRowHeader`
+- `CALENDAR_CalendarTimeSlotIndicator`
+
+Package-owned colors should come from MUI theme tokens. Demo data may still provide consumer `entry.color` values.
 
 Slot prop forwarding:
 
@@ -480,7 +500,7 @@ Row Header `ownerState` contains:
 }
 ```
 
-Slot contract helpers in `src/components/calendar/utils/slots.js` own default slot resolution, slot prop lookup, `sx` splitting, and `ownerState` construction for month and week views. Keep new slot-facing fields there so month and week slot contracts do not drift.
+Slot-facing `ownerState` is built where the slot is rendered so the call site stays easy to audit.
 
 Internal provider note:
 
@@ -883,7 +903,7 @@ function CustomCalendarItem({ item, layout, sx, ...props }) {
 - Keep package primitives reusable; avoid demo/product-specific controls inside `src/components/calendar/`.
 - Keep package vocabulary in `CALENDAR_LANGUAGE.md` current when adding new calendar concepts.
 - Prefer MUI `sx`, `slots`, and `slotProps` for customization.
-- Keep slot-facing `ownerState` construction in `src/components/calendar/utils/slots.js`.
+- Keep slot-facing `ownerState` construction close to the rendered slot.
 - Keep Row Header rendering behind `slots.rowHeader`; do not add label-array Interfaces.
 - Keep week clipping and lane layout in `src/components/calendar/utils/weekLayout.js`.
 - Keep week geometry constants and minute-to-pixel helpers in `src/components/calendar/utils/weekGeometry.js`.

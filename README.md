@@ -44,7 +44,6 @@ const entries = [
 		title: "Deep Work",
 		start: "2026-05-18T08:57:00",
 		end: "2026-05-18T12:46:00",
-		color: "#ccfbf1",
 	},
 ];
 
@@ -91,7 +90,6 @@ const entries = [
 		title: "Client Work",
 		start: "2026-05-18T09:00:00",
 		end: "2026-05-18T11:30:00",
-		color: "#dbeafe",
 		projectId: "project-1",
 	},
 ];
@@ -316,6 +314,35 @@ Pass custom renderers with `slots` and extra props with `slotProps`.
 	slotProps={{ item: { sx: { borderRadius: 2 } } }}
 />
 ```
+
+## MUI Styling
+
+All exported calendar primitives accept `sx`. Native month/week structure can be styled through `slotProps` keys such as `monthRoot`, `monthWeekdayHeader`, `weekRoot`, `weekHeader`, `weekColumn`, `weekDraggableEntry`, and `weekResizeHandle`.
+
+Chronocal also registers MUI custom component names prefixed with `CALENDAR_`, so theme overrides can target package internals:
+
+```js
+const theme = createTheme({
+	components: {
+		CALENDAR_CalendarItem: {
+			styleOverrides: {
+				root: ({ theme }) => ({
+					borderRadius: theme.shape.borderRadius * 2,
+				}),
+			},
+		},
+		CALENDAR_CalendarWeekView: {
+			styleOverrides: {
+				column: ({ theme }) => ({
+					backgroundColor: theme.palette.background.default,
+				}),
+			},
+		},
+	},
+});
+```
+
+Available theme component names are `CALENDAR_CalendarRoot`, `CALENDAR_CalendarGrid`, `CALENDAR_CalendarTopbar`, `CALENDAR_CalendarMonthView`, `CALENDAR_CalendarWeekView`, `CALENDAR_CalendarCell`, `CALENDAR_CalendarCellHeader`, `CALENDAR_CalendarEntry`, `CALENDAR_CalendarItem`, `CALENDAR_CalendarRowHeader`, and `CALENDAR_CalendarTimeSlotIndicator`.
 
 Custom item example:
 

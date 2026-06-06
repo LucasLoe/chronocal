@@ -1,14 +1,31 @@
 import { Stack } from "@mui/material";
+import { styled, useThemeProps } from "@mui/material/styles";
 
-export function CalendarTopbar({ children, sx, ...rest }) {
+const CalendarTopbarRoot = styled(Stack, {
+	name: "CALENDAR_CalendarTopbar",
+	slot: "Root",
+})({
+	alignItems: "center",
+	minWidth: "max-content",
+	flexWrap: "nowrap",
+	paddingTop: 8,
+	paddingBottom: 8,
+});
+
+export function CalendarTopbar(inProps) {
+	const { children, sx, ...rest } = useThemeProps({
+		props: inProps,
+		name: "CALENDAR_CalendarTopbar",
+	});
+
 	return (
-		<Stack
+		<CalendarTopbarRoot
 			direction='row'
 			spacing={1}
-			sx={{ alignItems: "center", minWidth: "max-content", flexWrap: "nowrap", py: 1, ...sx }}
+			sx={sx}
 			{...rest}
 		>
 			{children}
-		</Stack>
+		</CalendarTopbarRoot>
 	);
 }
