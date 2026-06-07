@@ -1,12 +1,15 @@
 import { Box } from "@mui/material";
 import { styled, useThemeProps } from "@mui/material/styles";
 import { CalendarContext } from "./calendarContext";
+import { CalendarCell } from "./CalendarCell";
 import { CalendarCellHeader } from "./CalendarCellHeader";
 import { CalendarEntry } from "./CalendarEntry";
 import { CalendarGrid } from "./CalendarGrid";
 import { CalendarItem } from "./CalendarItem";
+import { CalendarMonthWeekdayHeader } from "./CalendarMonthWeekdayHeader";
 import { CalendarRowHeader } from "./CalendarRowHeader";
 import { CalendarTimeSlotIndicator } from "./CalendarTimeSlotIndicator";
+import { CalendarWeekHeader } from "./CalendarWeekHeader";
 import { useCalendarState } from "./useCalendarState";
 import { CALENDAR_VIEWS } from "./utils/views";
 import { WORK_HOUR_PRESETS } from "./utils/dateRange";
@@ -72,11 +75,14 @@ export function CalendarRoot(inProps) {
 		defaultTimeSlotMinutes,
 	});
 	const resolvedSlots = {
+		cell: CalendarCell,
 		cellHeader: CalendarCellHeader,
 		entry: CalendarEntry,
 		item: CalendarItem,
+		monthWeekdayHeader: CalendarMonthWeekdayHeader,
 		rowHeader: CalendarRowHeader,
 		timeSlotIndicator: CalendarTimeSlotIndicator,
+		weekHeader: CalendarWeekHeader,
 		...slots,
 	};
 	const calendar = {

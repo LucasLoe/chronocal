@@ -1,7 +1,6 @@
-import { Box, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import { styled, useThemeProps } from "@mui/material/styles";
 import dayjs from "../../lib/dayjs";
-import { CalendarCell } from "./CalendarCell";
 import { getEntriesForDate, getWeekdayLabels, isSameDay } from "./utils/dateRange";
 import { normalizeCalendarEntries } from "./utils/entries";
 import { chunkDates } from "./utils/layout";
@@ -13,7 +12,6 @@ const MONTH_CELL_MIN_WIDTH = 132;
 const MONTH_CELL_MIN_HEIGHT = 116;
 const MONTH_WEEKDAY_HEADER_HEIGHT = 40;
 const STICKY_ROW_HEADER_Z_INDEX = 4;
-const STICKY_COLUMN_HEADER_Z_INDEX = 5;
 const STICKY_CORNER_Z_INDEX = 6;
 
 const CalendarMonthViewRoot = styled(Box, {
@@ -50,35 +48,6 @@ const CalendarMonthCorner = styled(Box, {
 	boxSizing: "border-box",
 }));
 
-const CalendarMonthWeekdayHeader = styled(Box, {
-	name: "CALENDAR_CalendarMonthView",
-	slot: "WeekdayHeader",
-	overridesResolver: (props, styles) => styles.weekdayHeader,
-})(({ theme }) => ({
-	position: "sticky",
-	top: 0,
-	zIndex: STICKY_COLUMN_HEADER_Z_INDEX,
-	paddingLeft: theme.spacing(1.25),
-	paddingRight: theme.spacing(1.25),
-	height: MONTH_WEEKDAY_HEADER_HEIGHT,
-	borderRight: "1px solid",
-	borderBottom: "1px solid",
-	borderColor: theme.palette.divider,
-	boxSizing: "border-box",
-	display: "flex",
-	alignItems: "center",
-	backgroundColor: theme.palette.background.default,
-}));
-
-const CalendarMonthWeekdayLabel = styled(Typography, {
-	name: "CALENDAR_CalendarMonthView",
-	slot: "WeekdayLabel",
-	overridesResolver: (props, styles) => styles.weekdayLabel,
-})(({ theme }) => ({
-	fontWeight: 700,
-	color: theme.palette.text.secondary,
-}));
-
 const CalendarMonthRowHeaderGutter = styled(Box, {
 	name: "CALENDAR_CalendarMonthView",
 	slot: "RowHeaderGutter",
@@ -112,7 +81,10 @@ export function CalendarMonthView(inProps) {
 	} = props;
 	const weekdayLabels = getWeekdayLabels({ showWeekend });
 	const columnCount = showWeekend ? 7 : 5;
+	const Cell = slots.cell;
+	const MonthWeekdayHeader = slots.monthWeekdayHeader;
 	const RowHeader = slots.rowHeader;
+	const { sx: cellSlotSx, ...cellSlotRest } = slotProps.cell || {};
 	const rowHeaderSlotProps = slotProps.rowHeader || {};
 	const normalizedEntries = normalizeCalendarEntries(entries);
 	const filteredMonthDates = dates.filter((date) => (showWeekend ? true : date.isoWeekday() <= 5));
@@ -162,23 +134,18 @@ export function CalendarMonthView(inProps) {
 					{...monthCornerSlotRest}
 				/>
 			)}
-			{weekdayLabels.map((label) => (
-				<CalendarMonthWeekdayHeader
+			{weekdayLabels.map((label, index) => (
+				<MonthWeekdayHeader
 					key={label}
 					data-calendar-month-weekday-header={label}
-					ownerState={{ ...monthViewOwnerState, label }}
+					index={index}
+					label={label}
+					view={view}
+					ownerState={{ ...monthViewOwnerState, label, index }}
+					labelProps={{ sx: monthWeekdayLabelSx, ...monthWeekdayLabelSlotRest }}
 					sx={monthWeekdayHeaderSx}
 					{...monthWeekdayHeaderSlotRest}
-				>
-					<CalendarMonthWeekdayLabel
-						variant='caption'
-						ownerState={{ ...monthViewOwnerState, label }}
-						sx={monthWeekdayLabelSx}
-						{...monthWeekdayLabelSlotRest}
-					>
-						{label}
-					</CalendarMonthWeekdayLabel>
-				</CalendarMonthWeekdayHeader>
+				/>
 			))}
 
 			{monthRows.map((rowDates, rowIndex) => {
@@ -213,8 +180,9 @@ export function CalendarMonthView(inProps) {
 						</CalendarMonthRowHeaderGutter>
 					),
 					...rowDates.map((date) => (
-						<CalendarCell
+						<Cell
 							key={date.format("YYYY-MM-DD")}
+							data-calendar-month-cell={date.format("YYYY-MM-DD")}
 							date={date}
 							isToday={isSameDay(date, dayjs())}
 							isCurrentMonth={date.month() === dayjs(anchorDate).month()}
@@ -223,7 +191,8 @@ export function CalendarMonthView(inProps) {
 							slots={slots}
 							slotProps={slotProps}
 							onItemClick={onItemClick}
-							sx={cellSx}
+							sx={[cellSx, cellSlotSx]}
+							{...cellSlotRest}
 						/>
 					)),
 				];

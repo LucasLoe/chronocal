@@ -40,10 +40,11 @@ const backlogTemplates = [
 ];
 
 function DemoBacklogItem({ template }) {
-	const { attributes, listeners, setNodeRef, transform, isDragging } = useCalendarExternalDragSource({
-		id: template.id,
-		source: template,
-	});
+	const { attributes, listeners, setNodeRef, transform, isDragging } =
+		useCalendarExternalDragSource({
+			id: template.id,
+			source: template,
+		});
 	const status = demoStatusStyles[template.status] || demoStatusStyles.normal;
 
 	return (
@@ -60,9 +61,7 @@ function DemoBacklogItem({ template }) {
 				boxShadow: isDragging ? 4 : 0,
 				cursor: "grab",
 				touchAction: "none",
-				transform: transform
-					? `translate3d(${transform.x}px, ${transform.y}px, 0)`
-					: undefined,
+				transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
 				zIndex: isDragging ? 1400 : "auto",
 				position: "relative",
 			}}

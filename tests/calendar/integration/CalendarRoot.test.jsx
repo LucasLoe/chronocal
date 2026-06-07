@@ -1,7 +1,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { describe, expect, it, vi } from "vitest";
+import { CalendarCell } from "../../../src/components/calendar/CalendarCell";
+import { CalendarItem } from "../../../src/components/calendar/CalendarItem";
+import { CalendarMonthWeekdayHeader } from "../../../src/components/calendar/CalendarMonthWeekdayHeader";
 import { CalendarRoot } from "../../../src/components/calendar/CalendarRoot";
+import { CalendarWeekHeader } from "../../../src/components/calendar/CalendarWeekHeader";
 import { useCalendar } from "../../../src/components/calendar/useCalendar";
 import { useCalendarExternalDragSource } from "../../../src/components/calendar/utils/calendarDnd";
 import { CALENDAR_VIEWS } from "../../../src/components/calendar/utils/views";
@@ -19,6 +23,44 @@ function ClickableTestItem({ item, onClick }) {
 		<button type='button' data-testid={`entry-${item.id}`} onClick={onClick}>
 			{item.title}
 		</button>
+	);
+}
+
+function WrappedCalendarItem(props) {
+	return <CalendarItem {...props} data-testid={`wrapped-entry-${props.item.id}`} />;
+}
+
+function WrappedCalendarCell({ marker, ...props }) {
+	return (
+		<CalendarCell
+			{...props}
+			data-testid={`month-cell-${props.date.format("YYYY-MM-DD")}`}
+			data-marker={marker}
+		/>
+	);
+}
+
+function WrappedMonthWeekdayHeader({ marker, ...props }) {
+	return (
+		<CalendarMonthWeekdayHeader
+			{...props}
+			data-testid={`month-weekday-${props.label}`}
+			data-marker={marker}
+		>
+			{props.label} business
+		</CalendarMonthWeekdayHeader>
+	);
+}
+
+function WrappedWeekHeader({ marker, ...props }) {
+	return (
+		<CalendarWeekHeader
+			{...props}
+			data-testid={`week-header-${props.date.format("YYYY-MM-DD")}`}
+			data-marker={marker}
+		>
+			{props.date.format("YYYY-MM-DD")} business
+		</CalendarWeekHeader>
 	);
 }
 
@@ -355,6 +397,70 @@ describe("CalendarRoot", () => {
 		expect(container.querySelector('[data-calendar-week-header="2026-05-18"]')).toHaveStyle({
 			minHeight: "48px",
 		});
+	});
+
+	it("renders wrapped public month cell and weekday header slots", () => {
+		render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.MONTH}
+				date='2026-05-18'
+				entries={[{ id: "a", title: "A", start: "2026-05-18T10:00:00" }]}
+				slots={{ cell: WrappedCalendarCell, monthWeekdayHeader: WrappedMonthWeekdayHeader }}
+				slotProps={{
+					cell: { marker: "cell-slot" },
+					monthWeekdayHeader: { marker: "weekday-slot" },
+				}}
+			/>,
+		);
+
+		expect(screen.getByTestId("month-cell-2026-05-18")).toHaveAttribute(
+			"data-marker",
+			"cell-slot",
+		);
+		expect(screen.getByTestId("month-cell-2026-05-18")).toHaveTextContent("A");
+		expect(screen.getByTestId("month-weekday-Mo")).toHaveAttribute(
+			"data-marker",
+			"weekday-slot",
+		);
+		expect(screen.getByTestId("month-weekday-Mo")).toHaveTextContent("Mo business");
+	});
+
+	it("renders wrapped public week header slots", () => {
+		render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.WEEK}
+				date='2026-05-18'
+				entries={[]}
+				slots={{ weekHeader: WrappedWeekHeader }}
+				slotProps={{ weekHeader: { marker: "week-header-slot" } }}
+			/>,
+		);
+
+		expect(screen.getByTestId("week-header-2026-05-18")).toHaveAttribute(
+			"data-marker",
+			"week-header-slot",
+		);
+		expect(screen.getByTestId("week-header-2026-05-18")).toHaveTextContent(
+			"2026-05-18 business",
+		);
+	});
+
+	it("keeps item clicks working when consumers wrap the public CalendarItem", () => {
+		const handleItemClick = vi.fn();
+
+		render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.MONTH}
+				date='2026-05-18'
+				entries={[{ id: "a", title: "A", start: "2026-05-18T10:00:00" }]}
+				onItemClick={handleItemClick}
+				slots={{ item: WrappedCalendarItem }}
+			/>,
+		);
+
+		fireEvent.click(screen.getByTestId("wrapped-entry-a"));
+
+		expect(handleItemClick).toHaveBeenCalledWith(expect.objectContaining({ id: "a" }));
 	});
 
 	it("applies theme component overrides to CALENDAR-prefixed calendar components", () => {

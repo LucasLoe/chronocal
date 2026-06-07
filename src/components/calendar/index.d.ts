@@ -72,6 +72,19 @@ export interface MonthItemOwnerState<
 	entry: NormalizedCalendarEntry<TEntry>;
 }
 
+export interface MonthWeekdayHeaderOwnerState {
+	label: string;
+	index: number;
+	view: CalendarView;
+	[key: string]: unknown;
+}
+
+export interface WeekHeaderOwnerState {
+	date: Dayjs;
+	view: CalendarView;
+	[key: string]: unknown;
+}
+
 export interface WeekEntryOwnerState<TEntry extends CalendarEntryItem = CalendarEntryItem> {
 	date: Dayjs;
 	entries: Array<NormalizedCalendarEntry<TEntry> & { layout: WeekEntryLayout }>;
@@ -99,6 +112,47 @@ export interface CalendarCellHeaderProps {
 	view: CalendarView;
 	ownerState: MonthCellOwnerState;
 	sx?: SxProps<Theme>;
+	[key: string]: unknown;
+}
+
+export interface CalendarCellProps<TEntry extends CalendarEntryItem = CalendarEntryItem> {
+	date: Dayjs;
+	entries: NormalizedCalendarEntry<TEntry>[];
+	view: CalendarView;
+	isToday: boolean;
+	isCurrentMonth: boolean;
+	slots: Required<CalendarSlots>;
+	slotProps?: CalendarSlotProps;
+	onItemClick?: (item: NormalizedCalendarEntry<TEntry>) => void;
+	ownerState?: MonthCellOwnerState<TEntry>;
+	sx?: SxProps<Theme>;
+	[key: string]: unknown;
+}
+
+export interface CalendarHeaderLabelProps {
+	sx?: SxProps<Theme>;
+	[key: string]: unknown;
+}
+
+export interface CalendarMonthWeekdayHeaderProps {
+	label: string;
+	index: number;
+	view: CalendarView;
+	ownerState: MonthWeekdayHeaderOwnerState;
+	labelProps?: CalendarHeaderLabelProps;
+	sx?: SxProps<Theme>;
+	children?: ReactNode;
+	[key: string]: unknown;
+}
+
+export interface CalendarWeekHeaderProps {
+	date: Dayjs;
+	label?: string;
+	view: CalendarView;
+	ownerState: WeekHeaderOwnerState;
+	labelProps?: CalendarHeaderLabelProps;
+	sx?: SxProps<Theme>;
+	children?: ReactNode;
 	[key: string]: unknown;
 }
 
@@ -145,11 +199,14 @@ export interface CalendarTimeSlotIndicatorProps {
 }
 
 export interface CalendarSlots {
+	cell?: ComponentType<CalendarCellProps>;
 	cellHeader?: ComponentType<CalendarCellHeaderProps>;
 	entry?: ComponentType<CalendarEntryProps>;
 	item?: ComponentType<CalendarItemProps>;
+	monthWeekdayHeader?: ComponentType<CalendarMonthWeekdayHeaderProps>;
 	rowHeader?: ComponentType<CalendarRowHeaderProps>;
 	timeSlotIndicator?: ComponentType<CalendarTimeSlotIndicatorProps>;
+	weekHeader?: ComponentType<CalendarWeekHeaderProps>;
 }
 
 export interface CalendarNativeSlotProps {
@@ -158,6 +215,7 @@ export interface CalendarNativeSlotProps {
 }
 
 export interface CalendarSlotProps {
+	cell?: Partial<CalendarCellProps>;
 	cellHeader?: Partial<CalendarCellHeaderProps>;
 	entry?: Partial<CalendarEntryProps>;
 	item?: Partial<CalendarItemProps>;
@@ -165,7 +223,7 @@ export interface CalendarSlotProps {
 	monthItemWrapper?: CalendarNativeSlotProps;
 	monthRoot?: CalendarNativeSlotProps;
 	monthRowHeaderGutter?: CalendarNativeSlotProps;
-	monthWeekdayHeader?: CalendarNativeSlotProps;
+	monthWeekdayHeader?: Partial<CalendarMonthWeekdayHeaderProps>;
 	monthWeekdayLabel?: CalendarNativeSlotProps;
 	rowHeader?: Partial<CalendarRowHeaderProps>;
 	timeSlotIndicator?: Partial<CalendarTimeSlotIndicatorProps>;
@@ -175,7 +233,7 @@ export interface CalendarSlotProps {
 	weekEntryTimePreview?: CalendarNativeSlotProps;
 	weekEntryTimePreviewLabel?: CalendarNativeSlotProps;
 	weekGrid?: CalendarNativeSlotProps;
-	weekHeader?: CalendarNativeSlotProps;
+	weekHeader?: Partial<CalendarWeekHeaderProps>;
 	weekHeaderLabel?: CalendarNativeSlotProps;
 	weekResizeHandle?: CalendarNativeSlotProps;
 	weekRoot?: CalendarNativeSlotProps;
@@ -191,11 +249,13 @@ export type CalendarThemeComponentName =
 	| "CALENDAR_CalendarEntry"
 	| "CALENDAR_CalendarGrid"
 	| "CALENDAR_CalendarItem"
+	| "CALENDAR_CalendarMonthWeekdayHeader"
 	| "CALENDAR_CalendarMonthView"
 	| "CALENDAR_CalendarRoot"
 	| "CALENDAR_CalendarRowHeader"
 	| "CALENDAR_CalendarTimeSlotIndicator"
 	| "CALENDAR_CalendarTopbar"
+	| "CALENDAR_CalendarWeekHeader"
 	| "CALENDAR_CalendarWeekView";
 
 export interface TimeSlotClickPayload {
@@ -307,12 +367,14 @@ export function CalendarRoot<TEntry extends CalendarEntryItem = CalendarEntryIte
 	props: CalendarRootProps<TEntry>,
 ): ReactElement;
 export function CalendarGrid(props: Record<string, unknown>): ReactElement;
-export function CalendarCell(props: Record<string, unknown>): ReactElement;
+export function CalendarCell(props: CalendarCellProps): ReactElement;
 export function CalendarCellHeader(props: CalendarCellHeaderProps): ReactElement;
 export function CalendarEntry(props: CalendarEntryProps): ReactElement;
 export function CalendarItem(props: CalendarItemProps): ReactElement;
+export function CalendarMonthWeekdayHeader(props: CalendarMonthWeekdayHeaderProps): ReactElement;
 export function CalendarRowHeader(props: CalendarRowHeaderProps): ReactElement;
 export function CalendarTimeSlotIndicator(props: CalendarTimeSlotIndicatorProps): ReactElement;
+export function CalendarWeekHeader(props: CalendarWeekHeaderProps): ReactElement;
 export function CalendarTopbar(props: {
 	children?: ReactNode;
 	sx?: SxProps<Theme>;

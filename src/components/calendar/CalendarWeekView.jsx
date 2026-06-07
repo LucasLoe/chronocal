@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Stack } from "@mui/material";
 import { styled, useThemeProps } from "@mui/material/styles";
 import { useRef } from "react";
 import dayjs from "../../lib/dayjs";
@@ -19,7 +19,6 @@ import { getWeekEntryLayouts } from "./utils/weekLayout";
 
 const WEEK_DAY_MIN_WIDTH = 132;
 const STICKY_ROW_HEADER_Z_INDEX = 4;
-const STICKY_COLUMN_HEADER_Z_INDEX = 5;
 const STICKY_CORNER_Z_INDEX = 6;
 
 const CalendarWeekViewRoot = styled(Box, {
@@ -50,35 +49,6 @@ const CalendarWeekViewGrid = styled(Box, {
 })(({ ownerState }) => ({
 	display: "grid",
 	gridTemplateColumns: `repeat(${ownerState.columnCount}, minmax(0, 1fr))`,
-}));
-
-const CalendarWeekHeader = styled(Box, {
-	name: "CALENDAR_CalendarWeekView",
-	slot: "Header",
-	overridesResolver: (props, styles) => styles.header,
-})(({ theme }) => ({
-	position: "sticky",
-	top: 0,
-	zIndex: STICKY_COLUMN_HEADER_Z_INDEX,
-	paddingLeft: theme.spacing(1.25),
-	paddingRight: theme.spacing(1.25),
-	height: WEEK_HEADER_HEIGHT,
-	borderRight: "1px solid",
-	borderBottom: "1px solid",
-	borderColor: theme.palette.divider,
-	boxSizing: "border-box",
-	display: "flex",
-	alignItems: "center",
-	backgroundColor: theme.palette.background.default,
-}));
-
-const CalendarWeekHeaderLabel = styled(Typography, {
-	name: "CALENDAR_CalendarWeekView",
-	slot: "HeaderLabel",
-	overridesResolver: (props, styles) => styles.headerLabel,
-})(({ theme }) => ({
-	fontWeight: 700,
-	color: theme.palette.text.secondary,
 }));
 
 const CalendarWeekColumn = styled(Box, {
@@ -304,6 +274,7 @@ export function CalendarWeekView(inProps) {
 	} = props;
 	const columnCount = showWeekend ? 7 : 5;
 	const Entry = slots.entry;
+	const Header = slots.weekHeader;
 	const Item = slots.item;
 	const RowHeader = slots.rowHeader;
 	const TimeSlotIndicator = slots.timeSlotIndicator;
@@ -398,22 +369,17 @@ export function CalendarWeekView(inProps) {
 					{...weekGridSlotRest}
 				>
 					{dates.map((date) => (
-						<CalendarWeekHeader
+						<Header
 							key={`${date.format("YYYY-MM-DD")}-heading`}
 							data-calendar-week-header={date.format("YYYY-MM-DD")}
+							date={date}
+							label={date.format("dd D.")}
+							view={view}
 							ownerState={{ ...weekViewOwnerState, date }}
+							labelProps={{ sx: weekHeaderLabelSx, ...weekHeaderLabelSlotRest }}
 							sx={weekHeaderSx}
 							{...weekHeaderSlotRest}
-						>
-							<CalendarWeekHeaderLabel
-								variant='caption'
-								ownerState={{ ...weekViewOwnerState, date }}
-								sx={weekHeaderLabelSx}
-								{...weekHeaderLabelSlotRest}
-							>
-								{date.format("dd D.")}
-							</CalendarWeekHeaderLabel>
-						</CalendarWeekHeader>
+						/>
 					))}
 
 					{dates.map((date) => {

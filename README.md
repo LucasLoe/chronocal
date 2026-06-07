@@ -65,10 +65,12 @@ import {
 	CalendarEntry,
 	CalendarGrid,
 	CalendarItem,
+	CalendarMonthWeekdayHeader,
 	CalendarRoot,
 	CalendarRowHeader,
 	CalendarTimeSlotIndicator,
 	CalendarTopbar,
+	CalendarWeekHeader,
 	CALENDAR_VIEWS,
 	TIME_SLOT_MINUTE_OPTIONS,
 	WORK_HOUR_PRESETS,
@@ -297,13 +299,16 @@ onEntryTimeChange({
 
 ## Slots
 
-| Slot                | Default                     | Used In                             | Purpose                                |
-| ------------------- | --------------------------- | ----------------------------------- | -------------------------------------- |
-| `cellHeader`        | `CalendarCellHeader`        | Month                               | Renders the header inside a month cell |
-| `entry`             | `CalendarEntry`             | Month and week                      | Renders the entry container/layer      |
-| `item`              | `CalendarItem`              | Month and week                      | Renders each entry item                |
-| `rowHeader`         | `CalendarRowHeader`         | Week by default, month when enabled | Renders Row Header content             |
-| `timeSlotIndicator` | `CalendarTimeSlotIndicator` | Week                                | Renders hovered Time Slot indicator    |
+| Slot                 | Default                        | Used In                             | Purpose                                |
+| -------------------- | ------------------------------ | ----------------------------------- | -------------------------------------- |
+| `cell`               | `CalendarCell`                 | Month                               | Renders a month day cell               |
+| `cellHeader`         | `CalendarCellHeader`           | Month                               | Renders the header inside a month cell |
+| `monthWeekdayHeader` | `CalendarMonthWeekdayHeader`   | Month                               | Renders the top weekday labels         |
+| `weekHeader`         | `CalendarWeekHeader`           | Week                                | Renders the top day labels             |
+| `entry`              | `CalendarEntry`                | Month and week                      | Renders the entry container/layer      |
+| `item`               | `CalendarItem`                 | Month and week                      | Renders each entry item                |
+| `rowHeader`          | `CalendarRowHeader`            | Week by default, month when enabled | Renders Row Header content             |
+| `timeSlotIndicator`  | `CalendarTimeSlotIndicator`    | Week                                | Renders hovered Time Slot indicator    |
 
 Pass custom renderers with `slots` and extra props with `slotProps`.
 
@@ -314,6 +319,35 @@ Pass custom renderers with `slots` and extra props with `slotProps`.
 	slotProps={{ item: { sx: { borderRadius: 2 } } }}
 />
 ```
+
+For business applications, prefer importing the default slot component, wrapping it, and passing it back. This keeps package-owned behavior intact.
+
+```jsx
+import { CalendarCell, CalendarItem, CalendarWeekHeader } from "@lucasloe/chronocal";
+
+function BusinessCell(props) {
+	return <CalendarCell {...props} sx={[{ bgcolor: "background.paper" }, props.sx]} />;
+}
+
+function BusinessWeekHeader(props) {
+	return (
+		<CalendarWeekHeader {...props}>
+			{props.date.format("ddd DD.MM")}
+		</CalendarWeekHeader>
+	);
+}
+
+function BusinessItem(props) {
+	return <CalendarItem {...props} sx={[{ borderRadius: 2 }, props.sx]} />;
+}
+
+<CalendarRoot
+	entries={entries}
+	slots={{ cell: BusinessCell, weekHeader: BusinessWeekHeader, item: BusinessItem }}
+/>;
+```
+
+The week column, draggable wrapper, resize handles, and drag preview are intentionally not replaceable components. They own time-slot click, hover, external drop, move, resize, and preview geometry. Style them with `slotProps` instead.
 
 ## MUI Styling
 
@@ -342,7 +376,7 @@ const theme = createTheme({
 });
 ```
 
-Available theme component names are `CALENDAR_CalendarRoot`, `CALENDAR_CalendarGrid`, `CALENDAR_CalendarTopbar`, `CALENDAR_CalendarMonthView`, `CALENDAR_CalendarWeekView`, `CALENDAR_CalendarCell`, `CALENDAR_CalendarCellHeader`, `CALENDAR_CalendarEntry`, `CALENDAR_CalendarItem`, `CALENDAR_CalendarRowHeader`, and `CALENDAR_CalendarTimeSlotIndicator`.
+Available theme component names are `CALENDAR_CalendarRoot`, `CALENDAR_CalendarGrid`, `CALENDAR_CalendarTopbar`, `CALENDAR_CalendarMonthView`, `CALENDAR_CalendarWeekView`, `CALENDAR_CalendarCell`, `CALENDAR_CalendarCellHeader`, `CALENDAR_CalendarMonthWeekdayHeader`, `CALENDAR_CalendarWeekHeader`, `CALENDAR_CalendarEntry`, `CALENDAR_CalendarItem`, `CALENDAR_CalendarRowHeader`, and `CALENDAR_CalendarTimeSlotIndicator`.
 
 Custom item example:
 
@@ -363,13 +397,16 @@ function CustomItem({ item, sx, onClick, ...props }) {
 
 Important slot props:
 
-| Slot                | Important props                                                          |
-| ------------------- | ------------------------------------------------------------------------ |
-| `cellHeader`        | `date`, `isToday`, `isCurrentMonth`, `view`, `ownerState`, `sx`          |
-| `entry`             | `children`, `date`, `entries`, `view`, `ownerState`, `sx`                |
-| `item`              | `item`, `entry`, `date`, `view`, `layout`, `ownerState`, `onClick`, `sx` |
-| `rowHeader`         | `view`, `rowIndex`, `rowStart`, `rowEnd`, `dates`, `ownerState`, `sx`    |
-| `timeSlotIndicator` | `date`, `view`, `timeSlot`, `ownerState`, `sx`                           |
+| Slot                 | Important props                                                          |
+| -------------------- | ------------------------------------------------------------------------ |
+| `cell`               | `date`, `entries`, `isToday`, `isCurrentMonth`, `view`, `slots`, `sx`    |
+| `cellHeader`         | `date`, `isToday`, `isCurrentMonth`, `view`, `ownerState`, `sx`          |
+| `monthWeekdayHeader` | `label`, `index`, `view`, `ownerState`, `labelProps`, `sx`               |
+| `weekHeader`         | `date`, `label`, `view`, `ownerState`, `labelProps`, `sx`                |
+| `entry`              | `children`, `date`, `entries`, `view`, `ownerState`, `sx`                |
+| `item`               | `item`, `entry`, `date`, `view`, `layout`, `ownerState`, `onClick`, `sx` |
+| `rowHeader`          | `view`, `rowIndex`, `rowStart`, `rowEnd`, `dates`, `ownerState`, `sx`    |
+| `timeSlotIndicator`  | `date`, `view`, `timeSlot`, `ownerState`, `sx`                           |
 
 ## Constants
 

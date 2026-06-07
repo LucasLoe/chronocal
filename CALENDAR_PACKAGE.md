@@ -26,10 +26,12 @@ export { useCalendar } from "./useCalendar";
 export { CalendarEntry } from "./CalendarEntry";
 export { CalendarGrid } from "./CalendarGrid";
 export { CalendarItem } from "./CalendarItem";
+export { CalendarMonthWeekdayHeader } from "./CalendarMonthWeekdayHeader";
 export { CalendarRoot } from "./CalendarRoot";
 export { CalendarRowHeader } from "./CalendarRowHeader";
 export { CalendarTopbar } from "./CalendarTopbar";
 export { CalendarTimeSlotIndicator } from "./CalendarTimeSlotIndicator";
+export { CalendarWeekHeader } from "./CalendarWeekHeader";
 export { useCalendarExternalDragSource } from "./utils/calendarDnd";
 export { TIME_SLOT_MINUTE_OPTIONS } from "./utils/timeSlots";
 export { WORK_HOUR_PRESETS, WORK_HOUR_PRESET_OPTIONS } from "./utils/dateRange";
@@ -45,6 +47,7 @@ CalendarRoot
 │  └─ usually CalendarTopbar with controls using useCalendar()
 └─ CalendarGrid
    ├─ CalendarMonthView
+   │  ├─ CalendarMonthWeekdayHeader
    │  ├─ optional Row Header Gutter
    │  └─ CalendarCell
    │     ├─ CalendarCellHeader
@@ -52,6 +55,7 @@ CalendarRoot
    │        └─ CalendarItem
    └─ CalendarWeekView
       ├─ Row Header Gutter
+      ├─ CalendarWeekHeader
       └─ day columns
          └─ CalendarEntry
             └─ positioned CalendarItem components
@@ -160,7 +164,7 @@ State props support controlled and uncontrolled usage:
 Other props:
 
 - `entries`: calendar entries array
-- `slots`: component overrides for `cellHeader`, `entry`, `item`, `rowHeader`, and `timeSlotIndicator`
+- `slots`: component overrides for `cell`, `cellHeader`, `monthWeekdayHeader`, `weekHeader`, `entry`, `item`, `rowHeader`, and `timeSlotIndicator`
 - `slotProps`: props forwarded to slotted components
 - `children`: rendered above the grid inside the calendar context, usually controls
 - `showRowHeaders`: optional boolean or function receiving row context; defaults to showing Row Headers in week view only
@@ -409,7 +413,10 @@ Default slots are resolved in `CalendarRoot`:
 
 ```js
 const resolvedSlots = {
+	cell: CalendarCell,
 	cellHeader: CalendarCellHeader,
+	monthWeekdayHeader: CalendarMonthWeekdayHeader,
+	weekHeader: CalendarWeekHeader,
 	entry: CalendarEntry,
 	item: CalendarItem,
 	rowHeader: CalendarRowHeader,
@@ -420,11 +427,54 @@ const resolvedSlots = {
 
 Supported slots:
 
+- `cell`: replaces `CalendarCell` in month view
 - `cellHeader`: replaces `CalendarCellHeader`
+- `monthWeekdayHeader`: replaces `CalendarMonthWeekdayHeader` in month view
+- `weekHeader`: replaces `CalendarWeekHeader` in week view
 - `entry`: replaces `CalendarEntry`
 - `item`: replaces `CalendarItem`
 - `rowHeader`: replaces `CalendarRowHeader` in Row Header Gutters
 - `timeSlotIndicator`: replaces `CalendarTimeSlotIndicator` in week view
+
+The intended business-project pattern is to import a default slot component, wrap it, and pass it back. This gives consumers brand and content control without exposing week interaction internals.
+
+```jsx
+import { CalendarCell, CalendarItem, CalendarWeekHeader } from "@lucasloe/chronocal";
+
+function BusinessCell(props) {
+	return <CalendarCell {...props} sx={[{ bgcolor: "background.paper" }, props.sx]} />;
+}
+
+function BusinessWeekHeader(props) {
+	return <CalendarWeekHeader {...props}>{props.date.format("ddd DD.MM")}</CalendarWeekHeader>;
+}
+
+function BusinessItem(props) {
+	return <CalendarItem {...props} sx={[{ borderRadius: 2 }, props.sx]} />;
+}
+
+<CalendarRoot
+	entries={entries}
+	slots={{ cell: BusinessCell, weekHeader: BusinessWeekHeader, item: BusinessItem }}
+/>;
+```
+
+Replaceability and interaction safety:
+
+| Area | API | Interaction impact |
+| --- | --- | --- |
+| Custom toolbar | `children` plus `useCalendar()` | Safe; does not touch grid behavior |
+| Month day cell | `slots.cell` | Safe; month-only, no week Drag And Drop |
+| Month cell date header | `slots.cellHeader` | Safe; month-only label area |
+| Month weekday header | `slots.monthWeekdayHeader` | Safe; visual header only |
+| Week day header | `slots.weekHeader` | Safe; visual header only |
+| Event item | `slots.item` | Safe when props are forwarded to the rendered root |
+| Entry container | `slots.entry` | Use carefully in week view; preserve supplied `sx` because it positions the layer |
+| Row headers | `slots.rowHeader` | Safe; labels only |
+| Time Slot hover indicator | `slots.timeSlotIndicator` | Safe; visual only |
+| Week columns | `slotProps.weekColumn` styling only | Package-owned to preserve hover, click, external drop, and geometry |
+| Draggable wrappers and resize handles | `slotProps.weekDraggableEntry` and `slotProps.weekResizeHandle` styling only | Package-owned to preserve move and resize behavior |
+| Entry time preview | `slotProps.weekEntryTimePreview` and `slotProps.weekEntryTimePreviewLabel` styling only | Package-owned to preserve preview geometry |
 
 Native structural slot props:
 
@@ -441,16 +491,21 @@ Theme component names:
 - `CALENDAR_CalendarWeekView`
 - `CALENDAR_CalendarCell`
 - `CALENDAR_CalendarCellHeader`
+- `CALENDAR_CalendarMonthWeekdayHeader`
 - `CALENDAR_CalendarEntry`
 - `CALENDAR_CalendarItem`
 - `CALENDAR_CalendarRowHeader`
 - `CALENDAR_CalendarTimeSlotIndicator`
+- `CALENDAR_CalendarWeekHeader`
 
 Package-owned colors should come from MUI theme tokens. Demo data may still provide consumer `entry.color` values.
 
 Slot prop forwarding:
 
+- `slotProps.cell` is passed to `cell` in month view.
 - `slotProps.cellHeader` is passed to `cellHeader` in month cells.
+- `slotProps.monthWeekdayHeader` is passed to `monthWeekdayHeader` in month view.
+- `slotProps.weekHeader` is passed to `weekHeader` in week view.
 - `slotProps.entry` is passed to `entry` in month cells and week day columns.
 - `slotProps.item` is passed to every rendered item in month and week views.
 - `slotProps.rowHeader` is passed to rendered Row Headers.
@@ -498,6 +553,21 @@ Row Header `ownerState` contains:
 {
 	(view, rowIndex, rowStart, rowEnd, dates); // month rows only
 }
+```
+
+Month cell slot props:
+
+```js
+function CustomCell({ date, entries, isToday, isCurrentMonth, view, slots, slotProps, sx, ...props }) {
+	// Usually wrap CalendarCell and forward props.
+}
+```
+
+Header slot props:
+
+```js
+function CustomMonthWeekdayHeader({ label, index, view, ownerState, labelProps, sx, ...props }) {}
+function CustomWeekHeader({ date, label, view, ownerState, labelProps, sx, ...props }) {}
 ```
 
 Slot-facing `ownerState` is built where the slot is rendered so the call site stays easy to audit.
@@ -554,6 +624,50 @@ Default behavior:
 - Shows `date.format("D")`
 - Highlights today with `primary.main`
 - Dims overflow-month dates
+
+## CalendarMonthWeekdayHeader
+
+`CalendarMonthWeekdayHeader` renders the sticky weekday labels at the top of month view.
+
+Location: `src/components/calendar/CalendarMonthWeekdayHeader.jsx`
+
+Props:
+
+- `label`
+- `index`
+- `view`
+- `ownerState`
+- `labelProps`: props forwarded to the inner label
+- `children`: optional replacement content
+- `sx`
+- Remaining props are forwarded to the header `Box`
+
+Default behavior:
+
+- Shows the month weekday label from `getWeekdayLabels()`
+- Stays sticky at the top of the scroll container
+
+## CalendarWeekHeader
+
+`CalendarWeekHeader` renders the sticky day labels at the top of week view.
+
+Location: `src/components/calendar/CalendarWeekHeader.jsx`
+
+Props:
+
+- `date`
+- `label`: defaults to `date.format("dd D.")`
+- `view`
+- `ownerState`
+- `labelProps`: props forwarded to the inner label
+- `children`: optional replacement content
+- `sx`
+- Remaining props are forwarded to the header `Box`
+
+Default behavior:
+
+- Shows `date.format("dd D.")`
+- Stays sticky at the top of the scroll container
 
 ## CalendarEntry
 
