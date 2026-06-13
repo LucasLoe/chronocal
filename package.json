@@ -1,80 +1,83 @@
 {
-  "name": "@lucasloe/chronocal",
-  "version": "0.1.0",
-  "description": "Reusable React month and week calendar primitives.",
-  "license": "MIT",
-  "type": "module",
-  "homepage": "https://github.com/lucasloe/chronocal#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/lucasloe/chronocal.git"
-  },
-  "bugs": {
-    "url": "https://github.com/lucasloe/chronocal/issues"
-  },
-  "keywords": [
-    "calendar",
-    "react",
-    "mui",
-    "month-view",
-    "week-view"
-  ],
-  "exports": {
-    ".": {
-      "types": "./src/components/calendar/index.d.ts",
-      "import": "./dist/index.js"
-    }
-  },
-  "types": "./src/components/calendar/index.d.ts",
-  "files": [
-    "dist",
-    "src/components/calendar/index.d.ts",
-    "README.md",
-    "CALENDAR_LANGUAGE.md",
-    "CALENDAR_PACKAGE.md",
-    "LICENSE"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "build:demo": "vite build --mode demo --outDir dist-demo",
-    "lint": "eslint .",
-    "preview": "vite preview --outDir dist-demo",
-    "test": "vitest",
-    "test:run": "vitest run"
-  },
-  "peerDependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@mui/material": "^7.0.0 || ^8.0.0 || ^9.0.0",
-    "dayjs": "^1.11.0",
-    "react": "^18.2.0 || ^19.0.0",
-    "react-dom": "^18.2.0 || ^19.0.0"
-  },
-  "devDependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@eslint/js": "^10.0.1",
-    "@mui/material": "^9.0.1",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/coverage-v8": "^4.1.8",
-    "dayjs": "^1.11.20",
-    "eslint": "^10.3.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.6.0",
-    "jsdom": "^29.1.1",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "react-router-dom": "^7.15.0",
-    "vite": "^8.0.12",
-    "vitest": "^4.1.6"
-  }
+	"name": "@lucasloe/chronocal",
+	"version": "1.0.0",
+	"author": {
+		"name": "Lucas Löser"
+	},
+	"description": "Reusable React month and week calendar primitives.",
+	"license": "MIT",
+	"type": "module",
+	"homepage": "https://github.com/lucasloe/chronocal#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/lucasloe/chronocal.git"
+	},
+	"bugs": {
+		"url": "https://github.com/lucasloe/chronocal/issues"
+	},
+	"keywords": [
+		"calendar",
+		"react",
+		"mui",
+		"month-view",
+		"week-view"
+	],
+	"exports": {
+		".": {
+			"types": "./src/components/calendar/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"types": "./src/components/calendar/index.d.ts",
+	"files": [
+		"dist",
+		"src/components/calendar/index.d.ts",
+		"README.md",
+		"CALENDAR_LANGUAGE.md",
+		"CALENDAR_PACKAGE.md",
+		"LICENSE"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"build:demo": "vite build --mode demo --outDir dist-demo",
+		"lint": "eslint .",
+		"preview": "vite preview --outDir dist-demo",
+		"test": "vitest",
+		"test:run": "vitest run"
+	},
+	"peerDependencies": {
+		"@emotion/react": "^11.14.0",
+		"@emotion/styled": "^11.14.1",
+		"@mui/material": "^7.0.0 || ^8.0.0 || ^9.0.0",
+		"dayjs": "^1.11.0",
+		"react": "^18.2.0 || ^19.0.0",
+		"react-dom": "^18.2.0 || ^19.0.0"
+	},
+	"devDependencies": {
+		"@emotion/react": "^11.14.0",
+		"@emotion/styled": "^11.14.1",
+		"@eslint/js": "^10.0.1",
+		"@mui/material": "^9.0.1",
+		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/react": "^16.3.2",
+		"@types/react": "^19.2.14",
+		"@types/react-dom": "^19.2.3",
+		"@vitejs/plugin-react": "^6.0.1",
+		"@vitest/coverage-v8": "^4.1.8",
+		"dayjs": "^1.11.20",
+		"eslint": "^10.3.0",
+		"eslint-plugin-react-hooks": "^7.1.1",
+		"eslint-plugin-react-refresh": "^0.5.2",
+		"globals": "^17.6.0",
+		"jsdom": "^29.1.1",
+		"react": "^19.2.6",
+		"react-dom": "^19.2.6",
+		"react-router-dom": "^7.15.0",
+		"vite": "^8.0.12",
+		"vitest": "^4.1.6"
+	}
 }
