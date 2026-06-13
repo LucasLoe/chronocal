@@ -1,5 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import { styled, useThemeProps } from "@mui/material/styles";
+import { formatWeekHeader, useCalendarLocalization } from "./CalendarLocalizationContext";
 
 const CalendarWeekHeaderRoot = styled(Box, {
 	name: "CALENDAR_CalendarWeekHeader",
@@ -31,7 +32,15 @@ const CalendarWeekHeaderLabel = styled(Typography, {
 
 export function CalendarWeekHeader(inProps) {
 	const props = useThemeProps({ props: inProps, name: "CALENDAR_CalendarWeekHeader" });
-	const { children, date, label = date.format("dd D."), labelProps = {}, sx, ...rest } = props;
+	const {
+		children,
+		date,
+		label,
+		labelProps = {},
+		sx,
+		...rest
+	} = props;
+	const { locale } = useCalendarLocalization();
 	const ownerState = rest.ownerState || {
 		date,
 		view: rest.view,
@@ -48,7 +57,7 @@ export function CalendarWeekHeader(inProps) {
 					ownerState={ownerState}
 					{...labelProps}
 				>
-					{label}
+					{label ?? formatWeekHeader(date, locale)}
 				</CalendarWeekHeaderLabel>
 			)}
 		</CalendarWeekHeaderRoot>

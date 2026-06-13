@@ -320,6 +320,7 @@ export interface CalendarRootProps<TEntry extends CalendarEntryItem = CalendarEn
 	timeSlotMinutes?: number | string;
 	defaultTimeSlotMinutes?: number | string;
 	onTimeSlotMinutesChange?: (nextMinutes: number) => void;
+	locale?: string;
 	onTimeSlotClick?: (payload: TimeSlotClickPayload) => void;
 	onItemClick?: (item: NormalizedCalendarEntry<TEntry>) => void;
 	onEntryTimeChange?: (payload: EntryTimeChangePayload<TEntry>) => void;
@@ -343,6 +344,7 @@ export interface CalendarContextValue {
 	workHours: WorkHourPreset;
 	timeSlotMinutes: number;
 	visibleDates: Dayjs[];
+	locale?: string;
 	slots: Required<CalendarSlots>;
 	slotProps: CalendarSlotProps;
 	setView: (nextView: CalendarView) => void;
@@ -363,6 +365,10 @@ export const TIME_SLOT_MINUTE_OPTIONS: number[];
 export const WORK_HOUR_PRESETS: Record<string, WorkHourPreset>;
 export const WORK_HOUR_PRESET_OPTIONS: WorkHourPreset[];
 
+export function CalendarLocalizationProvider(props: {
+	children?: ReactNode;
+	locale?: string;
+}): ReactElement;
 export function CalendarRoot<TEntry extends CalendarEntryItem = CalendarEntryItem>(
 	props: CalendarRootProps<TEntry>,
 ): ReactElement;

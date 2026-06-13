@@ -1,5 +1,6 @@
 import dayjs from "../../../lib/dayjs";
 import { getCalendarEntryEnd } from "./entries";
+import { formatTime, formatTimeRange } from "../CalendarLocalizationContext";
 import {
 	getPointerYWithinElement,
 	getWeekVisibleRange,
@@ -164,7 +165,13 @@ export function createWeekEntryTimeChange({
 	};
 }
 
-export function createWeekEntryTimePreview({ change, date, workHours, hourHeight = WEEK_HOUR_HEIGHT }) {
+export function createWeekEntryTimePreview({
+	change,
+	date,
+	locale,
+	workHours,
+	hourHeight = WEEK_HOUR_HEIGHT,
+}) {
 	return {
 		...change,
 		date,
@@ -176,11 +183,18 @@ export function createWeekEntryTimePreview({ change, date, workHours, hourHeight
 			workHours,
 			hourHeight,
 		}),
-		label:
-			change.action === WEEK_ENTRY_TIME_ACTIONS.RESIZE_START
-				? change.start.format("HH:mm")
-				: change.action === WEEK_ENTRY_TIME_ACTIONS.RESIZE_END
-					? change.end.format("HH:mm")
-					: `${change.start.format("HH:mm")}-${change.end.format("HH:mm")}`,
+		label: createWeekEntryTimePreviewLabel({ change, locale }),
 	};
+}
+
+export function createWeekEntryTimePreviewLabel({ change, locale }) {
+	if (change.action === WEEK_ENTRY_TIME_ACTIONS.RESIZE_START) {
+		return formatTime(change.start, locale);
+	}
+
+	if (change.action === WEEK_ENTRY_TIME_ACTIONS.RESIZE_END) {
+		return formatTime(change.end, locale);
+	}
+
+	return formatTimeRange(change.start, change.end, locale);
 }

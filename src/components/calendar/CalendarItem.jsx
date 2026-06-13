@@ -1,5 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import { styled, useThemeProps } from "@mui/material/styles";
+import { formatTime, useCalendarLocalization } from "./CalendarLocalizationContext";
 
 const CalendarItemRoot = styled(Box, {
 	name: "CALENDAR_CalendarItem",
@@ -55,6 +56,7 @@ export function CalendarItem(inProps) {
 		props: inProps,
 		name: "CALENDAR_CalendarItem",
 	});
+	const { locale } = useCalendarLocalization();
 	const calendarItem = entry || item;
 	const ownerState = { ...rest.ownerState, calendarItem, clickable: Boolean(rest.onClick) };
 
@@ -70,7 +72,7 @@ export function CalendarItem(inProps) {
 			{...rest}
 		>
 			<CalendarItemTime variant='caption'>
-				{calendarItem.start.format("HH:mm")}
+				{formatTime(calendarItem.start, locale)}
 			</CalendarItemTime>
 			<CalendarItemTitle variant='caption'>
 				{calendarItem.title}

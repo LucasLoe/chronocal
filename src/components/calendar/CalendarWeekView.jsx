@@ -2,6 +2,7 @@ import { Box, Stack } from "@mui/material";
 import { styled, useThemeProps } from "@mui/material/styles";
 import { useRef } from "react";
 import dayjs from "../../lib/dayjs";
+import { formatWeekHeader, useCalendarLocalization } from "./CalendarLocalizationContext";
 import { isSameDay } from "./utils/dateRange";
 import { normalizeCalendarEntries } from "./utils/entries";
 import { createCalendarItemClickHandler } from "./utils/itemEvents";
@@ -273,6 +274,7 @@ export function CalendarWeekView(inProps) {
 	workHours,
 	} = props;
 	const columnCount = showWeekend ? 7 : 5;
+	const { locale } = useCalendarLocalization();
 	const Entry = slots.entry;
 	const Header = slots.weekHeader;
 	const Item = slots.item;
@@ -333,6 +335,7 @@ export function CalendarWeekView(inProps) {
 	} = useWeekDndInteractions({
 		dates,
 		gridRef: weekGridRef,
+		locale,
 		onEntryTimeChange,
 		onExternalItemDrop,
 		onTimeSlotClick,
@@ -373,7 +376,7 @@ export function CalendarWeekView(inProps) {
 							key={`${date.format("YYYY-MM-DD")}-heading`}
 							data-calendar-week-header={date.format("YYYY-MM-DD")}
 							date={date}
-							label={date.format("dd D.")}
+							label={formatWeekHeader(date, locale)}
 							view={view}
 							ownerState={{ ...weekViewOwnerState, date }}
 							labelProps={{ sx: weekHeaderLabelSx, ...weekHeaderLabelSlotRest }}
@@ -449,17 +452,17 @@ export function CalendarWeekView(inProps) {
 												view,
 												timeSlot: hoveredTimeSlot.timeSlot,
 											}}
-											sx={{ ...timeSlotIndicatorSx, pointerEvents: "none" }}
+											sx={[timeSlotIndicatorSx, { pointerEvents: "none" }]}
 											{...timeSlotIndicatorSlotRest}
 										/>
 									</CalendarWeekTimeSlotLayer>
 								)}
 								<Entry
 									date={date}
-									entries={positionedEntries}
-									view={view}
-									ownerState={entryOwnerState}
-									sx={{ position: "absolute", inset: 0, ...weekEntrySx }}
+								entries={positionedEntries}
+								view={view}
+								ownerState={entryOwnerState}
+									sx={[{ position: "absolute", inset: 0 }, weekEntrySx]}
 									{...weekEntrySlotRest}
 								>
 									{positionedEntries.map((entry) => {
@@ -499,9 +502,9 @@ export function CalendarWeekView(inProps) {
 												<Item
 													item={entry}
 													entry={entry}
-													date={date}
-													view={view}
-													layout={layout}
+											date={date}
+											view={view}
+											layout={layout}
 													onClick={handleWeekItemClick(itemClickHandler)}
 													ownerState={{ date, item: entry, entry, view, layout }}
 													{...itemSlotRest}

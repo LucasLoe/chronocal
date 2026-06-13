@@ -70,7 +70,7 @@ export function CalendarCell(inProps) {
 				entries={entries}
 				view={view}
 				ownerState={ownerState}
-				sx={{ flex: 1, minHeight: 0, overflow: "auto", ...entrySx }}
+							sx={[{ flex: 1, minHeight: 0, overflow: "auto" }, entrySx]}
 				{...entrySlotRest}
 			>
 				{entries.map((entry) => {

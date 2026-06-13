@@ -30,6 +30,8 @@
     "dist",
     "src/components/calendar/index.d.ts",
     "README.md",
+    "CALENDAR_LANGUAGE.md",
+    "CALENDAR_PACKAGE.md",
     "LICENSE"
   ],
   "publishConfig": {
@@ -47,10 +49,10 @@
   "peerDependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@mui/material": "^9.0.1",
-    "dayjs": "^1.11.20",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "@mui/material": "^7.0.0 || ^8.0.0 || ^9.0.0",
+    "dayjs": "^1.11.0",
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0"
   },
   "devDependencies": {
     "@emotion/react": "^11.14.0",

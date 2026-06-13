@@ -2,12 +2,12 @@ import { useMemo, useState } from "react";
 import dayjs from "../../lib/dayjs";
 import {
 	CALENDAR_VIEWS,
-	formatToolbarTitle,
 	getNextAnchorDate,
 	getVisibleDates,
 } from "./utils/views";
 import { WORK_HOUR_PRESETS } from "./utils/dateRange";
 import { DEFAULT_TIME_SLOT_MINUTES, normalizeTimeSlotMinutes } from "./utils/timeSlots";
+import { formatCalendarTitle } from "./CalendarLocalizationContext";
 
 function getWorkHours(workHoursPreset) {
 	return (
@@ -27,6 +27,7 @@ export function useCalendarState({
 	onShowWeekendChange,
 	onWorkHoursPresetChange,
 	onTimeSlotMinutesChange,
+	locale,
 	defaultView = CALENDAR_VIEWS.MONTH,
 	defaultDate,
 	defaultShowWeekend = true,
@@ -92,7 +93,7 @@ export function useCalendarState({
 		() => getVisibleDates({ view, anchorDate, showWeekend }),
 		[view, anchorDate, showWeekend],
 	);
-	const title = formatToolbarTitle({ view, anchorDate });
+	const title = formatCalendarTitle({ view, date: anchorDate, locale });
 
 	return {
 		view,
@@ -101,8 +102,9 @@ export function useCalendarState({
 		showWeekend,
 		workHoursPreset,
 		workHours,
-		timeSlotMinutes,
-		visibleDates,
+	timeSlotMinutes,
+	visibleDates,
+	locale,
 		setView,
 		setDate,
 		setShowWeekend,

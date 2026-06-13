@@ -1,5 +1,10 @@
 import { Box, Typography } from "@mui/material";
 import { styled, useThemeProps } from "@mui/material/styles";
+import {
+	formatCellWeekday,
+	formatDayOfMonth,
+	useCalendarLocalization,
+} from "./CalendarLocalizationContext";
 
 const CalendarCellHeaderRoot = styled(Box, {
 	name: "CALENDAR_CalendarCellHeader",
@@ -38,6 +43,7 @@ export function CalendarCellHeader(inProps) {
 		props: inProps,
 		name: "CALENDAR_CalendarCellHeader",
 	});
+	const { locale } = useCalendarLocalization();
 	const ownerState = rest.ownerState || {
 		date,
 		isToday: rest.isToday,
@@ -53,10 +59,10 @@ export function CalendarCellHeader(inProps) {
 	return (
 		<CalendarCellHeaderRoot ownerState={ownerState} sx={sx} {...rest}>
 			<CalendarCellHeaderWeekday ownerState={ownerState} variant='caption'>
-				{date.format("dd")}
+				{formatCellWeekday(date, locale)}
 			</CalendarCellHeaderWeekday>
 			<CalendarCellHeaderDay ownerState={ownerState}>
-				{date.format("D")}
+				{formatDayOfMonth(date, locale)}
 			</CalendarCellHeaderDay>
 		</CalendarCellHeaderRoot>
 	);

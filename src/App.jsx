@@ -19,6 +19,7 @@ import { Outlet, Route, Routes } from "react-router-dom";
 import {
 	CalendarRoot,
 	CalendarTopbar,
+	CalendarLocalizationProvider,
 	CALENDAR_VIEWS,
 	TIME_SLOT_MINUTE_OPTIONS,
 	WORK_HOUR_PRESET_OPTIONS,
@@ -289,24 +290,26 @@ function HomePage() {
 				minHeight: 0,
 			}}
 		>
-			<CalendarRoot
-				entries={visibleEntries}
-				onTimeSlotClick={({ start, end }) => console.log({ start, end })}
-				onItemClick={(item) => console.log(item)}
-				onExternalItemDrop={addBacklogTemplateToCalendar}
-				onEntryTimeChange={({ id, start, end, action }) => {
-					console.log({ id, start, end, action });
-					setEntries((current) => updateCalendarSampleEntryTime(current, { id, start, end }));
-				}}
-				slots={{ item: DemoCalendarItem }}
-				slotProps={{
-					cellHeader: { sx: { bgcolor: "#eee" } },
-					entry: { sx: { gap: 0.25, p: 0.5 } },
-				}}
-				sx={{ flex: 1, minHeight: 0 }}
-			>
-				<DemoCalendarControls filter={filter} onFilterChange={setFilter} />
-			</CalendarRoot>
+			<CalendarLocalizationProvider locale='de'>
+				<CalendarRoot
+					entries={visibleEntries}
+					onTimeSlotClick={({ start, end }) => console.log({ start, end })}
+					onItemClick={(item) => console.log(item)}
+					onExternalItemDrop={addBacklogTemplateToCalendar}
+					onEntryTimeChange={({ id, start, end, action }) => {
+						console.log({ id, start, end, action });
+						setEntries((current) => updateCalendarSampleEntryTime(current, { id, start, end }));
+					}}
+					slots={{ item: DemoCalendarItem }}
+					slotProps={{
+						cellHeader: { sx: { bgcolor: "#eee" } },
+						entry: { sx: { gap: 0.25, p: 0.5 } },
+					}}
+					sx={{ flex: 1, minHeight: 0 }}
+				>
+					<DemoCalendarControls filter={filter} onFilterChange={setFilter} />
+				</CalendarRoot>
+			</CalendarLocalizationProvider>
 		</Box>
 	);
 }

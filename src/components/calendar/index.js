@@ -4,6 +4,7 @@ export { useCalendar } from "./useCalendar";
 export { CalendarEntry } from "./CalendarEntry";
 export { CalendarGrid } from "./CalendarGrid";
 export { CalendarItem } from "./CalendarItem";
+export { CalendarLocalizationProvider } from "./CalendarLocalizationProvider";
 export { CalendarMonthWeekdayHeader } from "./CalendarMonthWeekdayHeader";
 export { CalendarRoot } from "./CalendarRoot";
 export { CalendarRowHeader } from "./CalendarRowHeader";

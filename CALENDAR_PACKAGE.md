@@ -9,7 +9,7 @@ AI-oriented implementation reference for the reusable calendar component package
 - Date adapter: `src/lib/dayjs.js`
 - UI framework: React with MUI components and `sx` styling
 - Supported views: `month`, `week`
-- Locale defaults: German locale, `Europe/Berlin` timezone, ISO week support
+- Localization: app-owned Day.js locale/timezone policy, `CalendarLocalizationProvider`, ISO week support
 - Customization model: MUI-style `slots` and `slotProps`
 - Package vocabulary: `CALENDAR_LANGUAGE.md`
 - Week interaction model: time slots with 5, 15, 30, or 60 minute snapping
@@ -26,6 +26,7 @@ export { useCalendar } from "./useCalendar";
 export { CalendarEntry } from "./CalendarEntry";
 export { CalendarGrid } from "./CalendarGrid";
 export { CalendarItem } from "./CalendarItem";
+export { CalendarLocalizationProvider } from "./CalendarLocalizationProvider";
 export { CalendarMonthWeekdayHeader } from "./CalendarMonthWeekdayHeader";
 export { CalendarRoot } from "./CalendarRoot";
 export { CalendarRowHeader } from "./CalendarRowHeader";
@@ -792,7 +793,7 @@ Location: `src/components/calendar/utils/dateRange.js`
 
 Important functions:
 
-- `getWeekdayLabels({ showWeekend })`: returns German weekday labels, Monday first
+- `getWeekdayLabels({ showWeekend, locale })`: returns localized weekday labels, Monday first
 - `getMonthViewDates(anchorDate)`: returns 42 Day.js dates for the month grid
 - `getWeekViewDates(anchorDate, showWeekend)`: returns five or seven dates for the ISO week
 - `isSameDay(a, b)`: day-level comparison
@@ -805,8 +806,15 @@ Location: `src/components/calendar/utils/views.js`
 Important functions:
 
 - `getVisibleDates({ view, anchorDate, showWeekend })`: delegates to the selected calendar view adapter
-- `formatToolbarTitle({ view, anchorDate })`: returns the selected calendar view title
 - `getNextAnchorDate({ view, anchorDate, direction })`: moves by the selected calendar view interval
+
+Location: `src/components/calendar/CalendarLocalizationProvider.jsx`
+
+Important functions:
+
+- `CalendarLocalizationProvider({ locale })`: provides a scoped locale string to calendar descendants
+- `useCalendarLocalization()`: reads the current calendar locale context
+- `formatCalendarTitle({ view, date, locale })`: formats the active view title
 
 Location: `src/components/calendar/useCalendarState.js`
 
@@ -852,7 +860,7 @@ Important functions:
 - `createWeekTimeSlotClickPayload({ date, view, timeSlot })`: creates the documented `onTimeSlotClick` payload
 - `createWeekEntryTimeInteraction({ action, entry, date, pointerY, pointerStartX, pointerStartY, timeSlotMinutes })`: captures entry move/resize start state
 - `createWeekEntryTimeChange({ interaction, date, pointerY, workHours, timeSlotMinutes, hourHeight })`: creates the documented `onEntryTimeChange` payload
-- `createWeekEntryTimePreview({ change, date, workHours, hourHeight })`: creates the internal ghost preview and time label from the same range used for commit
+- `createWeekEntryTimePreview({ change, date, locale, workHours, hourHeight })`: creates the internal ghost preview and time label from the same range used for commit
 - `trapWeekEntryPointerEvent(event)`: stops entry hover from reaching the Time Slot layer
 
 Location: `src/components/calendar/utils/itemEvents.js`
@@ -880,8 +888,9 @@ Configured plugins:
 
 Configured defaults:
 
-- Locale: `de`
-- Timezone: `Europe/Berlin`
+- None. Locale and timezone are app policy and must not be set in this package module.
+
+Demo-specific locale loading belongs in `src/main.jsx` or another demo-only entry point. Calendar label formatting belongs in `src/components/calendar/CalendarLocalizationProvider.jsx`.
 
 Use this module instead of importing `dayjs` directly when working in this package.
 

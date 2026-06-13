@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
+import "dayjs/locale/de";
 import dayjs from "../../../src/lib/dayjs";
+import { formatCalendarTitle } from "../../../src/components/calendar/CalendarLocalizationContext";
 import {
 	CALENDAR_VIEWS,
-	formatToolbarTitle,
 	getNextAnchorDate,
 	getVisibleDates,
 } from "../../../src/components/calendar/utils/views";
@@ -78,10 +79,10 @@ describe("calendar view behaviour", () => {
 
 	it("formats month and week titles", () => {
 		expect(
-			formatToolbarTitle({ view: CALENDAR_VIEWS.MONTH, anchorDate: dayjs("2026-05-18") }),
+			formatCalendarTitle({ view: CALENDAR_VIEWS.MONTH, date: dayjs("2026-05-18"), locale: "de" }),
 		).toBe("Mai 2026");
 		expect(
-			formatToolbarTitle({ view: CALENDAR_VIEWS.WEEK, anchorDate: dayjs("2026-05-18") }),
+			formatCalendarTitle({ view: CALENDAR_VIEWS.WEEK, date: dayjs("2026-05-18"), locale: "de" }),
 		).toBe("18.-24. Mai 2026");
 	});
 });

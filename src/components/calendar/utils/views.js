@@ -9,21 +9,10 @@ export const CALENDAR_VIEWS = {
 const CALENDAR_VIEW_ADAPTERS = {
 	[CALENDAR_VIEWS.MONTH]: {
 		getVisibleDates: ({ anchorDate }) => getMonthViewDates(anchorDate),
-		formatTitle: ({ anchorDate }) => dayjs(anchorDate).format("MMMM YYYY"),
 		getNextAnchorDate: ({ anchorDate, direction }) => dayjs(anchorDate).add(direction, "month"),
 	},
 	[CALENDAR_VIEWS.WEEK]: {
 		getVisibleDates: ({ anchorDate, showWeekend }) => getWeekViewDates(anchorDate, showWeekend),
-		formatTitle: ({ anchorDate }) => {
-			const start = dayjs(anchorDate).startOf("isoWeek");
-			const end = start.add(6, "day");
-
-			if (start.month() === end.month()) {
-				return `${start.format("D.")}-${end.format("D. MMMM YYYY")}`;
-			}
-
-			return `${start.format("D. MMM")} - ${end.format("D. MMM YYYY")}`;
-		},
 		getNextAnchorDate: ({ anchorDate, direction }) => dayjs(anchorDate).add(direction, "week"),
 	},
 };
@@ -34,10 +23,6 @@ function getCalendarViewAdapter(view) {
 
 export function getVisibleDates({ view, anchorDate, showWeekend }) {
 	return getCalendarViewAdapter(view).getVisibleDates({ anchorDate, showWeekend });
-}
-
-export function formatToolbarTitle({ view, anchorDate }) {
-	return getCalendarViewAdapter(view).formatTitle({ anchorDate });
 }
 
 export function getNextAnchorDate({ view, anchorDate, direction }) {

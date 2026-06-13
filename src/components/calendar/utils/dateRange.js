@@ -8,8 +8,12 @@ export const WORK_HOUR_PRESETS = {
 
 export const WORK_HOUR_PRESET_OPTIONS = Object.values(WORK_HOUR_PRESETS);
 
-export function getWeekdayLabels({ showWeekend }) {
-	const labels = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+export function getWeekdayLabels({ showWeekend, locale }) {
+	const weekStart = dayjs("2026-05-18").startOf("isoWeek");
+	const labels = Array.from({ length: 7 }, (_, index) => {
+		const date = weekStart.add(index, "day");
+		return (locale ? date.locale(locale) : date).format("dd");
+	});
 	return showWeekend ? labels : labels.slice(0, 5);
 }
 

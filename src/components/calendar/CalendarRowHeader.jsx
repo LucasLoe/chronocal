@@ -1,6 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import { styled, useThemeProps } from "@mui/material/styles";
-import { CALENDAR_VIEWS } from "./utils/views";
+import { formatRowHeader, useCalendarLocalization } from "./CalendarLocalizationContext";
 
 const CalendarRowHeaderRoot = styled(Box, {
 	name: "CALENDAR_CalendarRowHeader",
@@ -23,24 +23,13 @@ const CalendarRowHeaderLabel = styled(Typography, {
 	color: theme.palette.text.secondary,
 }));
 
-function getDefaultRowHeaderText(ownerState) {
-	if (ownerState.view === CALENDAR_VIEWS.WEEK) {
-		return ownerState.rowStart.format("HH:mm");
-	}
-
-	if (ownerState.view === CALENDAR_VIEWS.MONTH) {
-		return `KW ${ownerState.rowStart.isoWeek()}`;
-	}
-
-	return null;
-}
-
 export function CalendarRowHeader(inProps) {
 	const { ownerState, sx, ...rest } = useThemeProps({
 		props: inProps,
 		name: "CALENDAR_CalendarRowHeader",
 	});
-	const text = getDefaultRowHeaderText(ownerState);
+	const { locale } = useCalendarLocalization();
+	const text = formatRowHeader(ownerState, locale);
 
 	delete rest.view;
 	delete rest.rowIndex;

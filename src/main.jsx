@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 import { BrowserRouter } from "react-router-dom";
+import "dayjs/locale/de";
 import App from "./App.jsx";
 import "./index.css";
 import "./lib/dayjs";

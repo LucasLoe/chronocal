@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import { styled, useThemeProps } from "@mui/material/styles";
 import dayjs from "../../lib/dayjs";
+import { useCalendarLocalization } from "./CalendarLocalizationContext";
 import { getEntriesForDate, getWeekdayLabels, isSameDay } from "./utils/dateRange";
 import { normalizeCalendarEntries } from "./utils/entries";
 import { chunkDates } from "./utils/layout";
@@ -79,7 +80,8 @@ export function CalendarMonthView(inProps) {
 	slotProps = {},
 	view = CALENDAR_VIEWS.MONTH,
 	} = props;
-	const weekdayLabels = getWeekdayLabels({ showWeekend });
+	const { locale } = useCalendarLocalization();
+	const weekdayLabels = getWeekdayLabels({ showWeekend, locale });
 	const columnCount = showWeekend ? 7 : 5;
 	const Cell = slots.cell;
 	const MonthWeekdayHeader = slots.monthWeekdayHeader;
@@ -136,7 +138,7 @@ export function CalendarMonthView(inProps) {
 			)}
 			{weekdayLabels.map((label, index) => (
 				<MonthWeekdayHeader
-					key={label}
+					key={`${index}-${label}`}
 					data-calendar-month-weekday-header={label}
 					index={index}
 					label={label}

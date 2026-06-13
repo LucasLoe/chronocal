@@ -65,6 +65,7 @@ import {
 	CalendarEntry,
 	CalendarGrid,
 	CalendarItem,
+	CalendarLocalizationProvider,
 	CalendarMonthWeekdayHeader,
 	CalendarRoot,
 	CalendarRowHeader,
@@ -76,6 +77,7 @@ import {
 	WORK_HOUR_PRESETS,
 	WORK_HOUR_PRESET_OPTIONS,
 	useCalendar,
+	useCalendarExternalDragSource,
 } from "@lucasloe/chronocal";
 ```
 
@@ -107,6 +109,45 @@ const entries = [
 | Extra fields | No       | Preserved and passed to callbacks and slots        |
 
 Missing `end` values remain absent on normalized entries. Week layout treats a missing `end` as one hour after `start` when positioning an entry.
+
+### TypeScript And Custom Metadata
+
+Extra entry fields are preserved and passed to callbacks and slots. In TypeScript, extend `CalendarEntryItem` for application metadata.
+
+```tsx
+import type { CalendarEntryItem, NormalizedCalendarEntry } from "@lucasloe/chronocal";
+
+interface ProjectEntry extends CalendarEntryItem {
+	projectId: string;
+	status?: "normal" | "warning" | "error";
+}
+
+const entries: ProjectEntry[] = [
+	{
+		id: "entry-1",
+		title: "Client Work",
+		start: "2026-05-18T09:00:00",
+		end: "2026-05-18T11:30:00",
+		projectId: "project-1",
+		status: "warning",
+	},
+];
+
+function handleItemClick(entry: NormalizedCalendarEntry<ProjectEntry>) {
+	console.log(entry.projectId, entry.start.format());
+}
+```
+
+Callback entries are normalized, so `start` and provided `end` values are Day.js objects. Convert them back to strings before persistence if your API stores ISO values.
+
+```js
+onEntryTimeChange={({ id, start, end }) => {
+	api.updateEntry(id, {
+		start: start.toISOString(),
+		end: end.toISOString(),
+	});
+}};
+```
 
 ## Month View
 
@@ -165,6 +206,68 @@ export function WeekCalendar({ initialEntries }) {
 ```
 
 Hide week Row Headers with `showRowHeaders={false}`.
+
+## External Drag Sources
+
+Week view supports dropping caller-owned values into day columns. Use `useCalendarExternalDragSource()` on an element outside the grid and handle `onExternalItemDrop` on `CalendarRoot`.
+
+```jsx
+import { Box } from "@mui/material";
+import { CalendarRoot, CALENDAR_VIEWS, useCalendarExternalDragSource } from "@lucasloe/chronocal";
+
+function BacklogItem({ template }) {
+	const { attributes, listeners, setNodeRef } = useCalendarExternalDragSource({
+		id: template.id,
+		source: template,
+	});
+
+	return (
+		<Box ref={setNodeRef} {...attributes} {...listeners} sx={{ cursor: "grab" }}>
+			{template.title}
+		</Box>
+	);
+}
+
+export function CalendarWithBacklog({ entries, setEntries, templates }) {
+	return (
+		<CalendarRoot
+			view={CALENDAR_VIEWS.WEEK}
+			entries={entries}
+			onExternalItemDrop={({ source, start, end }) => {
+				setEntries((current) => [
+					...current,
+					{
+						id: crypto.randomUUID(),
+						title: source.title,
+						start,
+						end,
+					},
+				]);
+			}}
+		>
+			{templates.map((template) => (
+				<BacklogItem key={template.id} template={template} />
+			))}
+		</CalendarRoot>
+	);
+}
+```
+
+External drop payload:
+
+```js
+onExternalItemDrop({
+	source, // caller-owned value supplied to useCalendarExternalDragSource()
+	start, // Day.js snapped start
+	end, // Day.js snapped end, currently one hour after start
+	date, // Day.js day column date
+	view, // "week"
+	timeSlotMinutes,
+	timeSlot,
+});
+```
+
+External drag uses native browser drag and drop. It is best suited for desktop pointer workflows; mobile support depends on the browser.
 
 ## Controls
 
@@ -225,6 +328,7 @@ export function CalendarWithControls({ entries }) {
 | `workHours`       | Active work-hour preset object      |
 | `timeSlotMinutes` | Active Time Slot granularity        |
 | `visibleDates`    | Dates rendered by the active view   |
+| `locale`          | Resolved calendar locale            |
 | `slots`           | Resolved slot components            |
 | `slotProps`       | Slot props passed to `CalendarRoot` |
 
@@ -260,9 +364,11 @@ export function CalendarWithControls({ entries }) {
 | `timeSlotMinutes`         | uncontrolled                         | Controlled Time Slot granularity                     |
 | `defaultTimeSlotMinutes`  | `15`                                 | Initial uncontrolled Time Slot granularity           |
 | `onTimeSlotMinutesChange` | none                                 | Called with the normalized Time Slot granularity     |
+| `locale`                  | nearest provider or global Day.js    | Optional locale for package-owned labels             |
 | `onTimeSlotClick`         | none                                 | Week-only callback for clicked Time Slots            |
 | `onItemClick`             | none                                 | Callback for clicked entries                         |
 | `onEntryTimeChange`       | none                                 | Week-only callback for move and resize changes       |
+| `onExternalItemDrop`      | none                                 | Week-only callback for dropped External Drag Sources |
 | `showRowHeaders`          | week only                            | Boolean or function controlling Row Header rendering |
 | `slots`                   | `{}`                                 | Custom renderers                                     |
 | `slotProps`               | `{}`                                 | Props forwarded to custom renderers                  |
@@ -297,18 +403,30 @@ onEntryTimeChange({
 });
 ```
 
+```js
+onExternalItemDrop({
+	source,
+	start, // Day.js snapped start
+	end, // Day.js snapped end
+	date, // Day.js day column date
+	view, // "week"
+	timeSlotMinutes,
+	timeSlot,
+});
+```
+
 ## Slots
 
-| Slot                 | Default                        | Used In                             | Purpose                                |
-| -------------------- | ------------------------------ | ----------------------------------- | -------------------------------------- |
-| `cell`               | `CalendarCell`                 | Month                               | Renders a month day cell               |
-| `cellHeader`         | `CalendarCellHeader`           | Month                               | Renders the header inside a month cell |
-| `monthWeekdayHeader` | `CalendarMonthWeekdayHeader`   | Month                               | Renders the top weekday labels         |
-| `weekHeader`         | `CalendarWeekHeader`           | Week                                | Renders the top day labels             |
-| `entry`              | `CalendarEntry`                | Month and week                      | Renders the entry container/layer      |
-| `item`               | `CalendarItem`                 | Month and week                      | Renders each entry item                |
-| `rowHeader`          | `CalendarRowHeader`            | Week by default, month when enabled | Renders Row Header content             |
-| `timeSlotIndicator`  | `CalendarTimeSlotIndicator`    | Week                                | Renders hovered Time Slot indicator    |
+| Slot                 | Default                      | Used In                             | Purpose                                |
+| -------------------- | ---------------------------- | ----------------------------------- | -------------------------------------- |
+| `cell`               | `CalendarCell`               | Month                               | Renders a month day cell               |
+| `cellHeader`         | `CalendarCellHeader`         | Month                               | Renders the header inside a month cell |
+| `monthWeekdayHeader` | `CalendarMonthWeekdayHeader` | Month                               | Renders the top weekday labels         |
+| `weekHeader`         | `CalendarWeekHeader`         | Week                                | Renders the top day labels             |
+| `entry`              | `CalendarEntry`              | Month and week                      | Renders the entry container/layer      |
+| `item`               | `CalendarItem`               | Month and week                      | Renders each entry item                |
+| `rowHeader`          | `CalendarRowHeader`          | Week by default, month when enabled | Renders Row Header content             |
+| `timeSlotIndicator`  | `CalendarTimeSlotIndicator`  | Week                                | Renders hovered Time Slot indicator    |
 
 Pass custom renderers with `slots` and extra props with `slotProps`.
 
@@ -330,11 +448,7 @@ function BusinessCell(props) {
 }
 
 function BusinessWeekHeader(props) {
-	return (
-		<CalendarWeekHeader {...props}>
-			{props.date.format("ddd DD.MM")}
-		</CalendarWeekHeader>
-	);
+	return <CalendarWeekHeader {...props}>{props.date.format("ddd DD.MM")}</CalendarWeekHeader>;
 }
 
 function BusinessItem(props) {
@@ -348,6 +462,36 @@ function BusinessItem(props) {
 ```
 
 The week column, draggable wrapper, resize handles, and drag preview are intentionally not replaceable components. They own time-slot click, hover, external drop, move, resize, and preview geometry. Style them with `slotProps` instead.
+
+### Slot Contract
+
+Custom slot components should forward package props to the rendered root element. This preserves clicks, layout, theme classes, data attributes, and test hooks.
+
+Forward these props unless you intentionally handle them yourself:
+
+| Prop type          | Why it matters                                           |
+| ------------------ | -------------------------------------------------------- |
+| `sx`               | Keeps MUI styling and package-provided layout intact     |
+| `onClick`          | Keeps `onItemClick` and slot click composition working   |
+| `children`         | Keeps nested package renderers visible                   |
+| `className`        | Keeps MUI styled classes and theme overrides working     |
+| `style`            | Keeps inline positioning and caller styles working       |
+| `data-*`, `aria-*` | Keeps diagnostics, tests, and accessibility hooks intact |
+| Unknown props      | Keeps future package props and caller props compatible   |
+
+Recommended pattern:
+
+```jsx
+import { CalendarItem } from "@lucasloe/chronocal";
+
+function BusinessItem({ item, sx, ...props }) {
+	return (
+		<CalendarItem {...props} item={item} sx={[{ borderRadius: 2, bgcolor: item.color }, sx]} />
+	);
+}
+```
+
+If a custom week item does not wrap `CalendarItem`, render a single root element and forward `onClick`, `sx`, and `...props` to that root.
 
 ## MUI Styling
 
@@ -378,6 +522,24 @@ const theme = createTheme({
 
 Available theme component names are `CALENDAR_CalendarRoot`, `CALENDAR_CalendarGrid`, `CALENDAR_CalendarTopbar`, `CALENDAR_CalendarMonthView`, `CALENDAR_CalendarWeekView`, `CALENDAR_CalendarCell`, `CALENDAR_CalendarCellHeader`, `CALENDAR_CalendarMonthWeekdayHeader`, `CALENDAR_CalendarWeekHeader`, `CALENDAR_CalendarEntry`, `CALENDAR_CalendarItem`, `CALENDAR_CalendarRowHeader`, and `CALENDAR_CalendarTimeSlotIndicator`.
 
+Common style override slot keys:
+
+| Component                             | Slot keys                                                                                                                                                                                  |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `CALENDAR_CalendarRoot`               | `root`                                                                                                                                                                                     |
+| `CALENDAR_CalendarGrid`               | `root`                                                                                                                                                                                     |
+| `CALENDAR_CalendarTopbar`             | `root`                                                                                                                                                                                     |
+| `CALENDAR_CalendarMonthView`          | `root`, `corner`, `rowHeaderGutter`                                                                                                                                                        |
+| `CALENDAR_CalendarWeekView`           | `root`, `content`, `grid`, `column`, `entryTimePreview`, `entryTimePreviewLabel`, `timeSlotLayer`, `draggableEntry`, `resizeHandle`, `rowHeaderGutter`, `rowHeaderCorner`, `rowHeaderCell` |
+| `CALENDAR_CalendarCell`               | `root`, `itemWrapper`                                                                                                                                                                      |
+| `CALENDAR_CalendarCellHeader`         | `root`, `weekday`, `day`                                                                                                                                                                   |
+| `CALENDAR_CalendarMonthWeekdayHeader` | `root`, `label`                                                                                                                                                                            |
+| `CALENDAR_CalendarWeekHeader`         | `root`, `label`                                                                                                                                                                            |
+| `CALENDAR_CalendarEntry`              | `root`                                                                                                                                                                                     |
+| `CALENDAR_CalendarItem`               | `root`, `time`, `title`                                                                                                                                                                    |
+| `CALENDAR_CalendarRowHeader`          | `root`, `label`                                                                                                                                                                            |
+| `CALENDAR_CalendarTimeSlotIndicator`  | `root`                                                                                                                                                                                     |
+
 Custom item example:
 
 ```jsx
@@ -385,7 +547,7 @@ import { Box, Typography } from "@mui/material";
 
 function CustomItem({ item, sx, onClick, ...props }) {
 	return (
-		<Box {...props} onClick={onClick} sx={{ height: "100%", p: 1, ...sx }}>
+		<Box {...props} onClick={onClick} sx={[{ height: "100%", p: 1 }, sx]}>
 			<Typography variant='caption' fontWeight={800}>
 				{item.start.format("HH:mm")}
 			</Typography>
@@ -424,6 +586,46 @@ WORK_HOUR_PRESETS = {
 };
 ```
 
+## Localization
+
+Chronocal uses Day.js for date math, but it does not set a global Day.js locale or timezone. The consuming app owns locale and timezone policy.
+
+By default, Chronocal formats labels with the current Day.js locale. For one-locale apps, configure Day.js before rendering the calendar.
+
+```js
+import dayjs from "dayjs";
+import "dayjs/locale/de";
+
+dayjs.locale("de");
+```
+
+For scoped calendar localization, use `CalendarLocalizationProvider`.
+
+```jsx
+import "dayjs/locale/de";
+import { CalendarLocalizationProvider, CalendarRoot } from "@lucasloe/chronocal";
+
+<CalendarLocalizationProvider locale='de'>
+	<CalendarRoot entries={entries} />
+</CalendarLocalizationProvider>;
+```
+
+For one-off calendars, pass `locale` directly to `CalendarRoot`. The root prop wins over the nearest provider.
+
+```jsx
+import "dayjs/locale/de";
+
+<CalendarRoot entries={entries} locale='de' />;
+```
+
+The app must import the Day.js locale before using it. Chronocal does not import all Day.js locales.
+
+MUI X `LocalizationProvider` does not automatically control Chronocal because Chronocal calls Day.js directly instead of reading the MUI X date adapter context. If your app uses MUI X, configure Day.js globally, wrap Chronocal in `CalendarLocalizationProvider`, or pass `locale` to `CalendarRoot`.
+
+Chronocal uses ISO weeks internally, so weeks start on Monday. Entry `start` and `end` values may be Day.js values, ISO strings, or native `Date` objects. Rendered slot entries and callback payloads receive Day.js values.
+
+Timezone conversion is not currently part of the public localization API.
+
 ## Layout Requirements
 
 The calendar fills a bounded parent and owns internal scrolling. If it overflows the page or does not scroll internally, check for a missing `height`, `flex: 1`, or `minHeight: 0` on an ancestor.
@@ -438,6 +640,37 @@ content: flex: 1; min-height: 0
 calendar wrapper: flex: 1; min-height: 0; display: flex; flex-direction: column
 CalendarRoot: flex: 1; min-height: 0
 ```
+
+## Accessibility And Interaction Scope
+
+Chronocal currently focuses on pointer-first calendar interactions.
+
+| Area                     | Current behavior                                                            |
+| ------------------------ | --------------------------------------------------------------------------- |
+| Item click               | Supported through `onItemClick`; custom item slots should forward `onClick` |
+| Time Slot click          | Supported in week view with pointer/mouse clicks                            |
+| Move and resize          | Supported with pointer drag in week view                                    |
+| External drop            | Supported with native browser drag and drop in week view                    |
+| Keyboard move/resize     | Not currently provided                                                      |
+| Keyboard grid navigation | Not currently provided                                                      |
+| ARIA calendar roles      | Not currently provided by default                                           |
+
+For production accessibility, add accessible labels and keyboard controls in your custom controls and item slots. If you replace the default `item` slot, preserve `onClick` and pass `aria-*` attributes to your rendered root.
+
+## Known Limitations
+
+| Area            | Limitation                                                                                |
+| --------------- | ----------------------------------------------------------------------------------------- |
+| Views           | Month and week only                                                                       |
+| Month entries   | No package-owned multi-day spanning layout, all-day lane, or "show more" overflow control |
+| Week entries    | Time-based entries only; all-day rows are not currently modeled                           |
+| Work hours      | Uses package presets; custom public presets are not currently exposed                     |
+| Timezone        | Timezone conversion is not currently part of the public localization API                   |
+| External drag   | Native browser drag and drop; mobile browser support varies                               |
+| `slotProps`     | Plain object props; function-valued MUI slot props are not currently supported            |
+| Accessibility   | Pointer-first interactions; keyboard calendar navigation is not built in                  |
+
+The repository also contains `CALENDAR_LANGUAGE.md` and `CALENDAR_PACKAGE.md` for shared vocabulary and implementation notes. Check the published package contents before relying on those files from an installed npm package.
 
 ## Development
 

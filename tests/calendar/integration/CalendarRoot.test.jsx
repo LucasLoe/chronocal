@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import "dayjs/locale/de";
 import { describe, expect, it, vi } from "vitest";
 import { CalendarCell } from "../../../src/components/calendar/CalendarCell";
 import { CalendarItem } from "../../../src/components/calendar/CalendarItem";
@@ -88,6 +89,12 @@ function CalendarStateProbe() {
 			{calendar.timeSlotMinutes}
 		</button>
 	);
+}
+
+function CalendarTitleProbe() {
+	const calendar = useCalendar();
+
+	return <div data-testid='calendar-title'>{calendar.title}</div>;
 }
 
 function ExternalDragSource({ source }) {
@@ -256,6 +263,24 @@ describe("CalendarRoot", () => {
 		expect(screen.getByTestId("entry-string")).toHaveAttribute("data-view", CALENDAR_VIEWS.MONTH);
 	});
 
+	it("formats package-owned labels with the root locale", () => {
+		render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.MONTH}
+				date='2026-05-18'
+				entries={[{ id: "a", title: "A", start: "2026-05-18T10:00:00" }]}
+				locale='de'
+			>
+				<CalendarTitleProbe />
+			</CalendarRoot>,
+		);
+
+		expect(screen.getByTestId("calendar-title")).toHaveTextContent("Mai 2026");
+		expect(screen.getAllByText("Mo").length).toBeGreaterThan(0);
+		expect(screen.getByText("18")).toBeInTheDocument();
+		expect(screen.getByText("10:00")).toBeInTheDocument();
+	});
+
 	it("passes week layout data to item slots", () => {
 		const Item = vi.fn(({ item, layout }) => (
 			<div data-testid={`entry-${item.id}`}>{layout.laneCount}</div>
@@ -333,7 +358,7 @@ describe("CalendarRoot", () => {
 		const denseEntryCall = Entry.mock.calls.find(([props]) => props.entries.length === 8);
 
 		expect(container.querySelector('[data-calendar-month-grid="true"]')).toBeInTheDocument();
-		expect(denseEntryCall[0].sx).toEqual(
+		expect(denseEntryCall[0].sx[0]).toEqual(
 			expect.objectContaining({ flex: 1, minHeight: 0, overflow: "auto" }),
 		);
 	});

@@ -44,6 +44,7 @@ function hasMovedPastThreshold(interaction, point) {
 export function useWeekDndInteractions({
 	dates,
 	gridRef,
+	locale,
 	onEntryTimeChange,
 	onExternalItemDrop,
 	onTimeSlotClick,
@@ -117,7 +118,12 @@ export function useWeekDndInteractions({
 			workHours,
 			timeSlotMinutes,
 		});
-		const preview = createWeekEntryTimePreview({ change, date: targetDate, workHours });
+		const preview = createWeekEntryTimePreview({
+			change,
+			date: targetDate,
+			locale,
+			workHours,
+		});
 		const currentPreview = activeEntryTimePreviewRef.current;
 
 		if (isSameEntryTimePreview(currentPreview, preview)) {

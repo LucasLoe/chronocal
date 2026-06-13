@@ -5,6 +5,8 @@ import { CalendarCell } from "./CalendarCell";
 import { CalendarCellHeader } from "./CalendarCellHeader";
 import { CalendarEntry } from "./CalendarEntry";
 import { CalendarGrid } from "./CalendarGrid";
+import { CalendarLocalizationProvider } from "./CalendarLocalizationProvider";
+import { useCalendarLocalization } from "./CalendarLocalizationContext";
 import { CalendarItem } from "./CalendarItem";
 import { CalendarMonthWeekdayHeader } from "./CalendarMonthWeekdayHeader";
 import { CalendarRowHeader } from "./CalendarRowHeader";
@@ -52,11 +54,14 @@ export function CalendarRoot(inProps) {
 	showRowHeaders,
 	slots = {},
 	slotProps = {},
+	locale: localeProp,
 	children,
 	gridSx,
 	sx,
 	...rest
 	} = props;
+	const { locale: providerLocale } = useCalendarLocalization();
+	const locale = localeProp ?? providerLocale;
 	const calendarState = useCalendarState({
 		view: viewProp,
 		date: dateProp,
@@ -66,8 +71,9 @@ export function CalendarRoot(inProps) {
 		onViewChange,
 		onDateChange,
 		onShowWeekendChange,
-		onWorkHoursPresetChange,
-		onTimeSlotMinutesChange,
+	onWorkHoursPresetChange,
+	onTimeSlotMinutesChange,
+	locale,
 		defaultView,
 		defaultDate,
 		defaultShowWeekend,
@@ -89,34 +95,37 @@ export function CalendarRoot(inProps) {
 		...calendarState,
 		slots: resolvedSlots,
 		slotProps,
+		locale,
 		onTimeSlotClick,
 		onItemClick,
 		onEntryTimeChange,
 	};
 
 	return (
-		<CalendarContext.Provider value={calendar}>
-			<CalendarRootRoot sx={sx}>
-				{children}
-				<CalendarGrid
-					view={calendarState.view}
-					dates={calendarState.visibleDates}
-					anchorDate={calendarState.date}
-					entries={entries}
-					showWeekend={calendarState.showWeekend}
-					workHours={calendarState.workHours}
-					timeSlotMinutes={calendarState.timeSlotMinutes}
-					onTimeSlotClick={onTimeSlotClick}
-					onItemClick={onItemClick}
-					onEntryTimeChange={onEntryTimeChange}
-					onExternalItemDrop={onExternalItemDrop}
-					showRowHeaders={showRowHeaders}
-					slots={resolvedSlots}
-					slotProps={slotProps}
-					sx={gridSx}
-					{...rest}
-				/>
-			</CalendarRootRoot>
-		</CalendarContext.Provider>
+		<CalendarLocalizationProvider locale={locale}>
+			<CalendarContext.Provider value={calendar}>
+				<CalendarRootRoot sx={sx}>
+					{children}
+					<CalendarGrid
+						view={calendarState.view}
+						dates={calendarState.visibleDates}
+						anchorDate={calendarState.date}
+						entries={entries}
+						showWeekend={calendarState.showWeekend}
+						workHours={calendarState.workHours}
+						timeSlotMinutes={calendarState.timeSlotMinutes}
+						onTimeSlotClick={onTimeSlotClick}
+						onItemClick={onItemClick}
+						onEntryTimeChange={onEntryTimeChange}
+						onExternalItemDrop={onExternalItemDrop}
+						showRowHeaders={showRowHeaders}
+						slots={resolvedSlots}
+						slotProps={slotProps}
+						sx={gridSx}
+						{...rest}
+					/>
+				</CalendarRootRoot>
+			</CalendarContext.Provider>
+		</CalendarLocalizationProvider>
 	);
 }
