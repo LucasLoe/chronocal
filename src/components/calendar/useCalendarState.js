@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import dayjs from "../../lib/dayjs";
 import {
 	CALENDAR_VIEWS,
+	getCalendarViewRange,
 	getNextAnchorDate,
 	getVisibleDates,
 } from "./utils/views";
@@ -93,6 +94,10 @@ export function useCalendarState({
 		() => getVisibleDates({ view, anchorDate, showWeekend }),
 		[view, anchorDate, showWeekend],
 	);
+	const range = useMemo(
+		() => getCalendarViewRange({ view, anchorDate }),
+		[view, anchorDate],
+	);
 	const title = formatCalendarTitle({ view, date: anchorDate, locale });
 
 	return {
@@ -102,9 +107,10 @@ export function useCalendarState({
 		showWeekend,
 		workHoursPreset,
 		workHours,
-	timeSlotMinutes,
-	visibleDates,
-	locale,
+		timeSlotMinutes,
+		visibleDates,
+		range,
+		locale,
 		setView,
 		setDate,
 		setShowWeekend,

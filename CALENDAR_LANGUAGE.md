@@ -10,6 +10,10 @@ A rendered area that represents one unit in a calendar view. In month view this 
 
 A horizontal set of Calendar Cells. Calendar Rows can exist in any view. They are not inherently time-based.
 
+## Calendar View Range
+
+The date range represented by the active view for data loading, reporting, and sidebars. Week view ranges use ISO week start/end. Month view ranges use calendar month start/end.
+
 ## Row Header
 
 Optional rendered content associated with a Calendar Row. A Row Header is supplied through the `rowHeader` slot and receives row context through `ownerState`.

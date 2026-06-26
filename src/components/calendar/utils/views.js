@@ -10,10 +10,18 @@ const CALENDAR_VIEW_ADAPTERS = {
 	[CALENDAR_VIEWS.MONTH]: {
 		getVisibleDates: ({ anchorDate }) => getMonthViewDates(anchorDate),
 		getNextAnchorDate: ({ anchorDate, direction }) => dayjs(anchorDate).add(direction, "month"),
+		getRange: ({ anchorDate }) => ({
+			start: dayjs(anchorDate).startOf("month"),
+			end: dayjs(anchorDate).endOf("month"),
+		}),
 	},
 	[CALENDAR_VIEWS.WEEK]: {
 		getVisibleDates: ({ anchorDate, showWeekend }) => getWeekViewDates(anchorDate, showWeekend),
 		getNextAnchorDate: ({ anchorDate, direction }) => dayjs(anchorDate).add(direction, "week"),
+		getRange: ({ anchorDate }) => ({
+			start: dayjs(anchorDate).startOf("isoWeek"),
+			end: dayjs(anchorDate).endOf("isoWeek"),
+		}),
 	},
 };
 
@@ -27,4 +35,8 @@ export function getVisibleDates({ view, anchorDate, showWeekend }) {
 
 export function getNextAnchorDate({ view, anchorDate, direction }) {
 	return getCalendarViewAdapter(view).getNextAnchorDate({ anchorDate, direction });
+}
+
+export function getCalendarViewRange({ view, anchorDate }) {
+	return getCalendarViewAdapter(view).getRange({ anchorDate });
 }

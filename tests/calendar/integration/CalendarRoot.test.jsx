@@ -97,6 +97,16 @@ function CalendarTitleProbe() {
 	return <div data-testid='calendar-title'>{calendar.title}</div>;
 }
 
+function CalendarRangeProbe() {
+	const calendar = useCalendar();
+
+	return (
+		<div data-testid='calendar-range'>
+			{calendar.range.start.format("YYYY-MM-DD")}/{calendar.range.end.format("YYYY-MM-DD")}
+		</div>
+	);
+}
+
 function ExternalDragSource({ source }) {
 	const { attributes, listeners, setNodeRef } = useCalendarExternalDragSource({
 		id: source.id,
@@ -272,10 +282,12 @@ describe("CalendarRoot", () => {
 				locale='de'
 			>
 				<CalendarTitleProbe />
+				<CalendarRangeProbe />
 			</CalendarRoot>,
 		);
 
 		expect(screen.getByTestId("calendar-title")).toHaveTextContent("Mai 2026");
+		expect(screen.getByTestId("calendar-range")).toHaveTextContent("2026-05-01/2026-05-31");
 		expect(screen.getAllByText("Mo").length).toBeGreaterThan(0);
 		expect(screen.getByText("18")).toBeInTheDocument();
 		expect(screen.getByText("10:00")).toBeInTheDocument();
@@ -380,6 +392,35 @@ describe("CalendarRoot", () => {
 		expect(container.querySelector('[data-calendar-month-row-header="2026-04-27"]')).toHaveStyle({
 			position: "sticky",
 			left: "0px",
+		});
+	});
+
+	it("applies semantic month layout sizing", () => {
+		const { container } = render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.MONTH}
+				date='2026-05-18'
+				entries={[]}
+				showRowHeaders={true}
+				monthLayout={{
+					cellMinHeight: 200,
+					cellMinWidth: 140,
+					rowHeaderWidth: 30,
+					weekdayHeaderHeight: 44,
+				}}
+			/>,
+		);
+
+		expect(container.querySelector('[data-calendar-month-grid="true"]')).toHaveStyle({
+			gridTemplateRows: "44px repeat(5, minmax(0, 1fr))",
+			minHeight: "1044px",
+			minWidth: "1010px",
+		});
+		expect(container.querySelector('[data-calendar-month-corner="true"]')).toHaveStyle({
+			width: "30px",
+		});
+		expect(container.querySelector('[data-calendar-month-row-header="2026-04-27"]')).toHaveStyle({
+			width: "30px",
 		});
 	});
 
@@ -848,6 +889,7 @@ describe("CalendarRoot", () => {
 	it("drops external drag sources onto week columns with calendar-owned payloads", async () => {
 		const source = { id: "template-a", title: "Template A" };
 		const handleExternalItemDrop = vi.fn();
+		const handleTimeSlotClick = vi.fn();
 		const { container } = render(
 			<CalendarRoot
 				view={CALENDAR_VIEWS.WEEK}
@@ -855,6 +897,7 @@ describe("CalendarRoot", () => {
 				entries={[]}
 				timeSlotMinutes={30}
 				onExternalItemDrop={handleExternalItemDrop}
+				onTimeSlotClick={handleTimeSlotClick}
 			>
 				<ExternalDragSource source={source} />
 			</CalendarRoot>,
@@ -866,8 +909,10 @@ describe("CalendarRoot", () => {
 		fireNativeDragEvent(screen.getByTestId("external-drag-source"), "dragstart", { dataTransfer });
 		fireNativeDragEvent(column, "dragover", { clientX: 50, clientY: 250, dataTransfer });
 		fireNativeDragEvent(column, "drop", { clientX: 50, clientY: 250, dataTransfer });
+		fireEvent.click(column, { clientX: 50, clientY: 250 });
 
 		await waitFor(() => expect(handleExternalItemDrop).toHaveBeenCalledTimes(1));
+		expect(handleTimeSlotClick).not.toHaveBeenCalled();
 		const payload = handleExternalItemDrop.mock.calls[0][0];
 		expect(payload).toEqual(
 			expect.objectContaining({

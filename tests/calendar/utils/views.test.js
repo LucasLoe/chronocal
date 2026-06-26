@@ -4,6 +4,7 @@ import dayjs from "../../../src/lib/dayjs";
 import { formatCalendarTitle } from "../../../src/components/calendar/CalendarLocalizationContext";
 import {
 	CALENDAR_VIEWS,
+	getCalendarViewRange,
 	getNextAnchorDate,
 	getVisibleDates,
 } from "../../../src/components/calendar/utils/views";
@@ -75,6 +76,22 @@ describe("calendar view behaviour", () => {
 				"YYYY-MM-DD",
 			),
 		).toBe("2026-05-25");
+	});
+
+	it("returns the active view data range", () => {
+		const monthRange = getCalendarViewRange({
+			view: CALENDAR_VIEWS.MONTH,
+			anchorDate: dayjs("2026-05-18"),
+		});
+		const weekRange = getCalendarViewRange({
+			view: CALENDAR_VIEWS.WEEK,
+			anchorDate: dayjs("2026-05-20"),
+		});
+
+		expect(monthRange.start.format("YYYY-MM-DDTHH:mm:ss")).toBe("2026-05-01T00:00:00");
+		expect(monthRange.end.format("YYYY-MM-DDTHH:mm:ss")).toBe("2026-05-31T23:59:59");
+		expect(weekRange.start.format("YYYY-MM-DDTHH:mm:ss")).toBe("2026-05-18T00:00:00");
+		expect(weekRange.end.format("YYYY-MM-DDTHH:mm:ss")).toBe("2026-05-24T23:59:59");
 	});
 
 	it("formats month and week titles", () => {

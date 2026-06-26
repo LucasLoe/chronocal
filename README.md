@@ -31,7 +31,7 @@ Peer dependencies:
 | `@emotion/styled` | `^11.14.1` |
 | `dayjs`           | `^1.11.20` |
 
-Chronocal exports ESM only.
+Chronocal exports ESM only. Runtime imports use the built `dist/index.js` bundle, and the readable calendar source is published alongside it under `src/components/calendar/` plus `src/lib/dayjs.js` so installed packages remain locally inspectable by humans and AI agents.
 
 ## Quick Start
 
@@ -73,6 +73,7 @@ import {
 	CalendarTopbar,
 	CalendarWeekHeader,
 	CALENDAR_VIEWS,
+	getCalendarViewRange,
 	TIME_SLOT_MINUTE_OPTIONS,
 	WORK_HOUR_PRESETS,
 	WORK_HOUR_PRESET_OPTIONS,
@@ -168,6 +169,17 @@ Enable month Row Headers when you need week numbers, totals, or other row-level 
 	view={CALENDAR_VIEWS.MONTH}
 	entries={entries}
 	showRowHeaders={({ view }) => view === CALENDAR_VIEWS.MONTH}
+/>
+```
+
+Tune month layout dimensions with `monthLayout` instead of replacing package grid templates.
+
+```jsx
+<CalendarRoot
+	view={CALENDAR_VIEWS.MONTH}
+	entries={entries}
+	showRowHeaders={({ view }) => view === CALENDAR_VIEWS.MONTH}
+	monthLayout={{ rowHeaderWidth: 30, cellMinHeight: 200 }}
 />
 ```
 
@@ -328,6 +340,7 @@ export function CalendarWithControls({ entries }) {
 | `workHours`       | Active work-hour preset object      |
 | `timeSlotMinutes` | Active Time Slot granularity        |
 | `visibleDates`    | Dates rendered by the active view   |
+| `range`           | Active view data range `{ start, end }` |
 | `locale`          | Resolved calendar locale            |
 | `slots`           | Resolved slot components            |
 | `slotProps`       | Slot props passed to `CalendarRoot` |
@@ -372,6 +385,7 @@ export function CalendarWithControls({ entries }) {
 | `showRowHeaders`          | week only                            | Boolean or function controlling Row Header rendering |
 | `slots`                   | `{}`                                 | Custom renderers                                     |
 | `slotProps`               | `{}`                                 | Props forwarded to custom renderers                  |
+| `monthLayout`             | package defaults                     | Month grid sizing: `rowHeaderWidth`, `cellMinWidth`, `cellMinHeight`, and `weekdayHeaderHeight` |
 | `children`                | none                                 | Rendered above the grid inside context               |
 | `gridSx`                  | none                                 | `sx` forwarded to the scroll container               |
 | `sx`                      | none                                 | `sx` applied to the root container                   |
@@ -414,6 +428,23 @@ onExternalItemDrop({
 	timeSlot,
 });
 ```
+
+## View Ranges
+
+`useCalendar()` exposes `calendar.range` for controls inside `CalendarRoot`. Use the exported `getCalendarViewRange()` helper when parent components need the same range for fetching, reports, or sidebars before rendering the calendar.
+
+```js
+import { CALENDAR_VIEWS, getCalendarViewRange } from "@lucasloe/chronocal";
+
+const range = getCalendarViewRange({ view: CALENDAR_VIEWS.WEEK, anchorDate: date });
+
+api.fetchWorklogs({
+	start: range.start.toISOString(),
+	end: range.end.toISOString(),
+});
+```
+
+Ranges use ISO weeks for week view and calendar months for month view. `end` is an end-of-period Day.js value.
 
 ## Slots
 
@@ -495,7 +526,7 @@ If a custom week item does not wrap `CalendarItem`, render a single root element
 
 ## MUI Styling
 
-All exported calendar primitives accept `sx`. Native month/week structure can be styled through `slotProps` keys such as `monthRoot`, `monthWeekdayHeader`, `weekRoot`, `weekHeader`, `weekColumn`, `weekDraggableEntry`, and `weekResizeHandle`.
+All exported calendar primitives accept `sx`. Native month/week structure can be styled through `slotProps` keys such as `monthRoot`, `monthWeekdayHeader`, `weekRoot`, `weekHeader`, `weekColumn`, `weekDraggableEntry`, and `weekResizeHandle`. Prefer `monthLayout` for month grid sizing before overriding month grid templates manually.
 
 Chronocal also registers MUI custom component names prefixed with `CALENDAR_`, so theme overrides can target package internals:
 

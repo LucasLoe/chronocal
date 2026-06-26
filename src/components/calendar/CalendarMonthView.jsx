@@ -25,9 +25,9 @@ const CalendarMonthViewRoot = styled(Box, {
 	minHeight: ownerState.monthGridMinHeight,
 	display: "grid",
 	gridTemplateColumns: ownerState.showMonthRowHeaders
-		? `${ROW_HEADER_GUTTER_WIDTH}px repeat(${ownerState.columnCount}, minmax(0, 1fr))`
+		? `${ownerState.monthRowHeaderWidth}px repeat(${ownerState.columnCount}, minmax(0, 1fr))`
 		: `repeat(${ownerState.columnCount}, minmax(0, 1fr))`,
-	gridTemplateRows: `${MONTH_WEEKDAY_HEADER_HEIGHT}px repeat(${ownerState.monthRowCount}, minmax(0, 1fr))`,
+	gridTemplateRows: `${ownerState.monthWeekdayHeaderHeight}px repeat(${ownerState.monthRowCount}, minmax(0, 1fr))`,
 	borderTop: "1px solid",
 	borderLeft: "1px solid",
 	borderColor: theme.palette.divider,
@@ -37,10 +37,11 @@ const CalendarMonthCorner = styled(Box, {
 	name: "CALENDAR_CalendarMonthView",
 	slot: "Corner",
 	overridesResolver: (props, styles) => styles.corner,
-})(({ theme }) => ({
+})(({ theme, ownerState }) => ({
 	position: "sticky",
 	top: 0,
 	left: 0,
+	width: ownerState.monthRowHeaderWidth,
 	zIndex: STICKY_CORNER_Z_INDEX,
 	borderRight: "1px solid",
 	borderBottom: "1px solid",
@@ -53,9 +54,10 @@ const CalendarMonthRowHeaderGutter = styled(Box, {
 	name: "CALENDAR_CalendarMonthView",
 	slot: "RowHeaderGutter",
 	overridesResolver: (props, styles) => styles.rowHeaderGutter,
-})(({ theme }) => ({
+})(({ theme, ownerState }) => ({
 	position: "sticky",
 	left: 0,
+	width: ownerState.monthRowHeaderWidth,
 	zIndex: STICKY_ROW_HEADER_Z_INDEX,
 	borderRight: "1px solid",
 	borderBottom: "1px solid",
@@ -66,19 +68,39 @@ const CalendarMonthRowHeaderGutter = styled(Box, {
 	backgroundColor: theme.palette.background.paper,
 }));
 
+function resolveMonthLayoutValue(value, fallback) {
+	const nextValue = Number(value);
+	return Number.isFinite(nextValue) && nextValue > 0 ? nextValue : fallback;
+}
+
+function resolveMonthLayout(monthLayout = {}) {
+	const layout = monthLayout || {};
+
+	return {
+		cellMinHeight: resolveMonthLayoutValue(layout.cellMinHeight, MONTH_CELL_MIN_HEIGHT),
+		cellMinWidth: resolveMonthLayoutValue(layout.cellMinWidth, MONTH_CELL_MIN_WIDTH),
+		rowHeaderWidth: resolveMonthLayoutValue(layout.rowHeaderWidth, ROW_HEADER_GUTTER_WIDTH),
+		weekdayHeaderHeight: resolveMonthLayoutValue(
+			layout.weekdayHeaderHeight,
+			MONTH_WEEKDAY_HEADER_HEIGHT,
+		),
+	};
+}
+
 export function CalendarMonthView(inProps) {
 	const props = useThemeProps({ props: inProps, name: "CALENDAR_CalendarMonthView" });
 	const {
-	anchorDate,
-	cellSx,
-	dates,
-	entries,
-	onItemClick,
-	showRowHeaders,
-	showWeekend,
-	slots,
-	slotProps = {},
-	view = CALENDAR_VIEWS.MONTH,
+		anchorDate,
+		cellSx,
+		dates,
+		entries,
+		monthLayout,
+		onItemClick,
+		showRowHeaders,
+		showWeekend,
+		slots,
+		slotProps = {},
+		view = CALENDAR_VIEWS.MONTH,
 	} = props;
 	const { locale } = useCalendarLocalization();
 	const weekdayLabels = getWeekdayLabels({ showWeekend, locale });
@@ -89,6 +111,7 @@ export function CalendarMonthView(inProps) {
 	const { sx: cellSlotSx, ...cellSlotRest } = slotProps.cell || {};
 	const rowHeaderSlotProps = slotProps.rowHeader || {};
 	const normalizedEntries = normalizeCalendarEntries(entries);
+	const resolvedMonthLayout = resolveMonthLayout(monthLayout);
 	const filteredMonthDates = dates.filter((date) => (showWeekend ? true : date.isoWeekday() <= 5));
 	const monthRows = chunkDates(filteredMonthDates, columnCount);
 	const firstMonthRow = monthRows[0] || [];
@@ -102,13 +125,19 @@ export function CalendarMonthView(inProps) {
 		dates: firstMonthRow,
 	});
 	const monthGridMinWidth =
-		columnCount * MONTH_CELL_MIN_WIDTH + (showMonthRowHeaders ? ROW_HEADER_GUTTER_WIDTH : 0);
-	const monthGridMinHeight = MONTH_WEEKDAY_HEADER_HEIGHT + monthRows.length * MONTH_CELL_MIN_HEIGHT;
+		columnCount * resolvedMonthLayout.cellMinWidth +
+		(showMonthRowHeaders ? resolvedMonthLayout.rowHeaderWidth : 0);
+	const monthGridMinHeight =
+		resolvedMonthLayout.weekdayHeaderHeight + monthRows.length * resolvedMonthLayout.cellMinHeight;
 	const monthViewOwnerState = {
 		columnCount,
+		monthCellMinHeight: resolvedMonthLayout.cellMinHeight,
+		monthCellMinWidth: resolvedMonthLayout.cellMinWidth,
 		monthGridMinHeight,
 		monthGridMinWidth,
+		monthRowHeaderWidth: resolvedMonthLayout.rowHeaderWidth,
 		monthRowCount: monthRows.length,
+		monthWeekdayHeaderHeight: resolvedMonthLayout.weekdayHeaderHeight,
 		showMonthRowHeaders,
 		view,
 	};
@@ -160,13 +189,14 @@ export function CalendarMonthView(inProps) {
 					rowEnd,
 					dates: rowDates,
 				};
+				const rowHeaderGutterOwnerState = { ...monthViewOwnerState, ...ownerState };
 
 				return [
 					showMonthRowHeaders && (
 						<CalendarMonthRowHeaderGutter
 							key={`row-header-${rowStart.format("YYYY-MM-DD")}`}
 							data-calendar-month-row-header={rowStart.format("YYYY-MM-DD")}
-							ownerState={ownerState}
+							ownerState={rowHeaderGutterOwnerState}
 							sx={monthRowHeaderGutterSx}
 							{...monthRowHeaderGutterSlotRest}
 						>

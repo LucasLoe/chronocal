@@ -14,4 +14,4 @@ export { CalendarWeekHeader } from "./CalendarWeekHeader";
 export { useCalendarExternalDragSource } from "./utils/calendarDnd";
 export { WORK_HOUR_PRESETS, WORK_HOUR_PRESET_OPTIONS } from "./utils/dateRange";
 export { TIME_SLOT_MINUTE_OPTIONS } from "./utils/timeSlots";
-export { CALENDAR_VIEWS } from "./utils/views";
+export { CALENDAR_VIEWS, getCalendarViewRange } from "./utils/views";

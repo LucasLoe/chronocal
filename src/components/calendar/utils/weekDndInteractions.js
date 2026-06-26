@@ -23,6 +23,7 @@ import {
 
 const EXTERNAL_DROP_DURATION_MINUTES = 60;
 const ENTRY_TIME_DRAG_THRESHOLD_PX = 2;
+const INTERACTION_CLICK_SUPPRESSION_MS = 200;
 
 function isSameEntryTimePreview(left, right) {
 	return (
@@ -55,6 +56,7 @@ export function useWeekDndInteractions({
 	const activeEntryTimeInteractionRef = useRef(null);
 	const activeEntryTimePreviewRef = useRef(null);
 	const suppressNextItemClickRef = useRef(false);
+	const suppressTimeSlotClickUntilRef = useRef(0);
 	const [hoveredTimeSlot, setHoveredTimeSlot] = useState(null);
 	const [activeEntryTimeId, setActiveEntryTimeId] = useState(null);
 	const [activeEntryTimePreview, setActiveEntryTimePreview] = useState(null);
@@ -140,6 +142,9 @@ export function useWeekDndInteractions({
 		setActiveEntryTimeId(null);
 		setActiveEntryTimePreview(null);
 	};
+	const suppressImmediateTimeSlotClick = () => {
+		suppressTimeSlotClickUntilRef.current = Date.now() + INTERACTION_CLICK_SUPPRESSION_MS;
+	};
 	const startEntryTimeInteraction = ({ action, date, disabled, entry }) => (event) => {
 		if (disabled || !onEntryTimeChange || event.button !== 0) {
 			return;
@@ -202,6 +207,7 @@ export function useWeekDndInteractions({
 			}
 
 			suppressNextItemClickRef.current = true;
+			suppressImmediateTimeSlotClick();
 			onEntryTimeChange({
 				id: preview.id,
 				start: preview.start,
@@ -244,6 +250,12 @@ export function useWeekDndInteractions({
 	};
 
 	const handleWeekColumnClick = (date) => (event) => {
+		if (Date.now() < suppressTimeSlotClickUntilRef.current) {
+			event.preventDefault();
+			event.stopPropagation();
+			return;
+		}
+
 		const timeSlot = getTimeSlotFromEvent(date, event);
 
 		onTimeSlotClick?.(createWeekTimeSlotClickPayload({ date, view, timeSlot }));
@@ -275,6 +287,7 @@ export function useWeekDndInteractions({
 		setHoveredTimeSlot(null);
 		const payload = createExternalDropPayload({ source, date, point: event });
 		if (payload) {
+			suppressImmediateTimeSlotClick();
 			onExternalItemDrop?.(payload);
 		}
 	};

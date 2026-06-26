@@ -31,6 +31,18 @@ export interface WorkHourPreset {
 	endHour: number;
 }
 
+export interface CalendarRange {
+	start: Dayjs;
+	end: Dayjs;
+}
+
+export interface CalendarMonthLayout {
+	cellMinHeight?: number;
+	cellMinWidth?: number;
+	rowHeaderWidth?: number;
+	weekdayHeaderHeight?: number;
+}
+
 export interface WeekEntryLayout {
 	top: number;
 	height: number;
@@ -328,6 +340,7 @@ export interface CalendarRootProps<TEntry extends CalendarEntryItem = CalendarEn
 	showRowHeaders?: boolean | ((context: ShowRowHeadersContext) => boolean);
 	slots?: CalendarSlots;
 	slotProps?: CalendarSlotProps;
+	monthLayout?: CalendarMonthLayout;
 	children?: ReactNode;
 	gridSx?: SxProps<Theme>;
 	sx?: SxProps<Theme>;
@@ -344,6 +357,7 @@ export interface CalendarContextValue {
 	workHours: WorkHourPreset;
 	timeSlotMinutes: number;
 	visibleDates: Dayjs[];
+	range: CalendarRange;
 	locale?: string;
 	slots: Required<CalendarSlots>;
 	slotProps: CalendarSlotProps;
@@ -364,6 +378,11 @@ export const CALENDAR_VIEWS: {
 export const TIME_SLOT_MINUTE_OPTIONS: number[];
 export const WORK_HOUR_PRESETS: Record<string, WorkHourPreset>;
 export const WORK_HOUR_PRESET_OPTIONS: WorkHourPreset[];
+
+export function getCalendarViewRange(options: {
+	view: CalendarView;
+	anchorDate: CalendarDateInput;
+}): CalendarRange;
 
 export function CalendarLocalizationProvider(props: {
 	children?: ReactNode;

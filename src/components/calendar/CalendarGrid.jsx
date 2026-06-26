@@ -18,23 +18,24 @@ const CalendarGridRoot = styled(Box, {
 export function CalendarGrid(inProps) {
 	const props = useThemeProps({ props: inProps, name: "CALENDAR_CalendarGrid" });
 	const {
-	view,
-	dates,
-	anchorDate,
-	entries,
-	showWeekend,
-	workHours,
-	timeSlotMinutes,
-	onTimeSlotClick,
-	onItemClick,
-	onEntryTimeChange,
-	onExternalItemDrop,
-	showRowHeaders,
-	slots,
-	slotProps = {},
-	cellSx,
-	sx,
-	...rest
+		view,
+		dates,
+		anchorDate,
+		entries,
+		showWeekend,
+		workHours,
+		timeSlotMinutes,
+		onTimeSlotClick,
+		monthLayout,
+		onItemClick,
+		onEntryTimeChange,
+		onExternalItemDrop,
+		showRowHeaders,
+		slots,
+		slotProps = {},
+		cellSx,
+		sx,
+		...rest
 	} = props;
 
 	return (
@@ -45,6 +46,7 @@ export function CalendarGrid(inProps) {
 					cellSx={cellSx}
 					dates={dates}
 					entries={entries}
+					monthLayout={monthLayout}
 					onItemClick={onItemClick}
 					showRowHeaders={showRowHeaders}
 					showWeekend={showWeekend}

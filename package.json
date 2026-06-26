@@ -1,6 +1,6 @@
 {
 	"name": "@lucasloe/chronocal",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"author": {
 		"name": "Lucas Löser"
 	},
@@ -31,8 +31,10 @@
 	"types": "./src/components/calendar/index.d.ts",
 	"files": [
 		"dist",
-		"src/components/calendar/index.d.ts",
+		"src/components/calendar",
+		"src/lib/dayjs.js",
 		"README.md",
+		"CHANGELOG.md",
 		"CALENDAR_LANGUAGE.md",
 		"CALENDAR_PACKAGE.md",
 		"LICENSE"

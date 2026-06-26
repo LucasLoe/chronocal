@@ -11,6 +11,7 @@ AI-oriented implementation reference for the reusable calendar component package
 - Supported views: `month`, `week`
 - Localization: app-owned Day.js locale/timezone policy, `CalendarLocalizationProvider`, ISO week support
 - Customization model: MUI-style `slots` and `slotProps`
+- Release tracking: `CHANGELOG.md`
 - Package vocabulary: `CALENDAR_LANGUAGE.md`
 - Week interaction model: time slots with 5, 15, 30, or 60 minute snapping
 - Test runner: Vitest with jsdom and Testing Library
@@ -37,6 +38,7 @@ export { useCalendarExternalDragSource } from "./utils/calendarDnd";
 export { TIME_SLOT_MINUTE_OPTIONS } from "./utils/timeSlots";
 export { WORK_HOUR_PRESETS, WORK_HOUR_PRESET_OPTIONS } from "./utils/dateRange";
 export { CALENDAR_VIEWS } from "./utils/views";
+export { getCalendarViewRange } from "./utils/views";
 ```
 
 ## Component Tree
@@ -74,7 +76,7 @@ Core behaviour is intentionally concentrated behind a few package-internal Modul
 - `utils/weekDndInteractions.js`: owns Week View pointer drag lifecycle, Entry Time Preview state, native external drop payloads, and post-drag click suppression
 - `utils/calendarDnd.js`: owns native browser drag adapters, source registry, drag source data, and external drag source hook
 - `utils/itemEvents.js`: owns item click callback ordering and propagation handling
-- `utils/views.js`: owns view constants, visible dates, titles, and navigation intervals
+- `utils/views.js`: owns view constants, visible dates, active-view ranges, titles, and navigation intervals
 - `useCalendarState.js`: owns controlled/uncontrolled state and derived calendar state
 - `utils/rowHeaders.js`: owns Row Header visibility resolution for view renderers
 
@@ -139,6 +141,7 @@ State transition logic lives in `src/components/calendar/useCalendarState.js`. `
 	onTimeSlotClick={({ start, end }) => console.log({ start, end })}
 	onItemClick={(item) => console.log(item)}
 	onEntryTimeChange={({ id, start, end, action }) => console.log({ id, start, end, action })}
+	monthLayout={{ rowHeaderWidth: 30, cellMinHeight: 200 }}
 	showRowHeaders={({ view }) => view === CALENDAR_VIEWS.WEEK}
 	defaultView={CALENDAR_VIEWS.MONTH}
 	defaultDate={dayjs()}
@@ -173,6 +176,7 @@ Other props:
 - `onItemClick`: callback fired with the clicked normalized calendar entry
 - `onEntryTimeChange`: week-only callback fired with a proposed `{ id, start, end, entry, action }` payload after entry move or resize
 - `onExternalItemDrop`: week-only callback fired when an External Drag Source is dropped onto a week day column with a normalized `{ source, start, end, date, view, timeSlotMinutes, timeSlot }` payload
+- `monthLayout`: month sizing adapter for `rowHeaderWidth`, `cellMinWidth`, `cellMinHeight`, and `weekdayHeaderHeight`
 - `gridSx`: `sx` forwarded to `CalendarGrid`
 - `sx`: `sx` applied to the root MUI `Box`
 - Remaining props are forwarded to `CalendarGrid`
@@ -203,6 +207,7 @@ calendar.workHoursPreset;
 calendar.workHours;
 calendar.timeSlotMinutes;
 calendar.visibleDates;
+calendar.range;
 calendar.slots;
 calendar.slotProps;
 ```
@@ -282,7 +287,15 @@ Month view behavior:
 - Filters out Saturday and Sunday cells when `showWeekend` is false.
 - Displays weekday labels from `getWeekdayLabels()`.
 - Can render an optional Row Header Gutter through the `rowHeader` slot and `showRowHeaders`.
+- Supports semantic `monthLayout` sizing so consumers do not need to replace native grid templates for common row/header dimensions.
 - Groups entries by same calendar day using `getEntriesForDate()`.
+
+Month layout defaults:
+
+- `rowHeaderWidth`: `58`
+- `cellMinWidth`: `132`
+- `cellMinHeight`: `116`
+- `weekdayHeaderHeight`: `40`
 
 Month view cell state:
 
@@ -807,6 +820,7 @@ Important functions:
 
 - `getVisibleDates({ view, anchorDate, showWeekend })`: delegates to the selected calendar view adapter
 - `getNextAnchorDate({ view, anchorDate, direction })`: moves by the selected calendar view interval
+- `getCalendarViewRange({ view, anchorDate })`: returns the active view data range as `{ start, end }`; week uses ISO week start/end and month uses calendar month start/end
 
 Location: `src/components/calendar/CalendarLocalizationProvider.jsx`
 
