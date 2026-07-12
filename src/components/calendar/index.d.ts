@@ -43,6 +43,11 @@ export interface CalendarMonthLayout {
 	weekdayHeaderHeight?: number;
 }
 
+export interface CalendarWeekLayout {
+	hourHeight?: number;
+	hourMinHeight?: number;
+}
+
 export interface WeekEntryLayout {
 	top: number;
 	height: number;
@@ -67,6 +72,7 @@ export interface RowHeaderOwnerState {
 	rowStart: Dayjs;
 	rowEnd: Dayjs;
 	dates?: Dayjs[];
+	hourHeight?: number;
 }
 
 export interface MonthCellOwnerState<TEntry extends CalendarEntryItem = CalendarEntryItem> {
@@ -101,6 +107,7 @@ export interface WeekEntryOwnerState<TEntry extends CalendarEntryItem = Calendar
 	date: Dayjs;
 	entries: Array<NormalizedCalendarEntry<TEntry> & { layout: WeekEntryLayout }>;
 	view: CalendarView;
+	hourHeight: number;
 }
 
 export interface WeekItemOwnerState<TEntry extends CalendarEntryItem = CalendarEntryItem> {
@@ -109,6 +116,7 @@ export interface WeekItemOwnerState<TEntry extends CalendarEntryItem = CalendarE
 	entry: NormalizedCalendarEntry<TEntry> & { layout: WeekEntryLayout };
 	view: CalendarView;
 	layout: WeekEntryLayout;
+	hourHeight: number;
 }
 
 export interface TimeSlotIndicatorOwnerState {
@@ -341,6 +349,7 @@ export interface CalendarRootProps<TEntry extends CalendarEntryItem = CalendarEn
 	slots?: CalendarSlots;
 	slotProps?: CalendarSlotProps;
 	monthLayout?: CalendarMonthLayout;
+	weekLayout?: CalendarWeekLayout;
 	children?: ReactNode;
 	gridSx?: SxProps<Theme>;
 	sx?: SxProps<Theme>;

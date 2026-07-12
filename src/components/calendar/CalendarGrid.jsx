@@ -31,6 +31,7 @@ export function CalendarGrid(inProps) {
 		onEntryTimeChange,
 		onExternalItemDrop,
 		showRowHeaders,
+		weekLayout,
 		slots,
 		slotProps = {},
 		cellSx,
@@ -64,6 +65,7 @@ export function CalendarGrid(inProps) {
 					onTimeSlotClick={onTimeSlotClick}
 					showRowHeaders={showRowHeaders}
 					showWeekend={showWeekend}
+					weekLayout={weekLayout}
 					slots={slots}
 					slotProps={slotProps}
 					timeSlotMinutes={timeSlotMinutes}

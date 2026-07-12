@@ -1,12 +1,16 @@
 {
 	"name": "@lucasloe/chronocal",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"author": {
 		"name": "Lucas Löser"
 	},
 	"description": "Reusable React month and week calendar primitives.",
 	"license": "MIT",
 	"type": "module",
+	"packageManager": "pnpm@11.1.2",
+	"engines": {
+		"node": ">=20.19.0"
+	},
 	"homepage": "https://github.com/lucasloe/chronocal#readme",
 	"repository": {
 		"type": "git",
@@ -49,7 +53,11 @@
 		"lint": "eslint .",
 		"preview": "vite preview --outDir dist-demo",
 		"test": "vitest",
-		"test:run": "vitest run"
+		"test:run": "vitest run",
+		"verify": "vitest run && eslint . && vite build && node scripts/verify-built-exports.mjs && node scripts/verify-declarations.mjs",
+		"verify:package": "node scripts/verify-package-contents.mjs",
+		"prepublishOnly": "npm run verify && npm run verify:package",
+		"prepack": "vite build"
 	},
 	"peerDependencies": {
 		"@emotion/react": "^11.14.0",
@@ -60,6 +68,7 @@
 		"react-dom": "^18.2.0 || ^19.0.0"
 	},
 	"devDependencies": {
+		"@babel/parser": "^7.29.3",
 		"@emotion/react": "^11.14.0",
 		"@emotion/styled": "^11.14.1",
 		"@eslint/js": "^10.0.1",
@@ -78,7 +87,6 @@
 		"jsdom": "^29.1.1",
 		"react": "^19.2.6",
 		"react-dom": "^19.2.6",
-		"react-router-dom": "^7.15.0",
 		"vite": "^8.0.12",
 		"vitest": "^4.1.6"
 	}

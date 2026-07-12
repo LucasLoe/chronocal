@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getExternalCalendarDragSource, hasExternalCalendarDragSource } from "./calendarDnd";
 import { getWeekTimeSlot } from "./timeSlots";
 import { CALENDAR_VIEWS } from "./views";
@@ -18,7 +18,6 @@ import {
 	getWeekBodyPointerYFromPoint,
 	getWeekDateAtPoint,
 	getWeekVisibleRange,
-	WEEK_HOUR_HEIGHT,
 } from "./weekGeometry";
 
 const EXTERNAL_DROP_DURATION_MINUTES = 60;
@@ -52,14 +51,25 @@ export function useWeekDndInteractions({
 	timeSlotMinutes,
 	view,
 	workHours,
+	hourHeight,
 }) {
 	const activeEntryTimeInteractionRef = useRef(null);
 	const activeEntryTimePreviewRef = useRef(null);
 	const suppressNextItemClickRef = useRef(false);
 	const suppressTimeSlotClickUntilRef = useRef(0);
+	const removeActivePointerListenersRef = useRef(null);
 	const [hoveredTimeSlot, setHoveredTimeSlot] = useState(null);
 	const [activeEntryTimeId, setActiveEntryTimeId] = useState(null);
 	const [activeEntryTimePreview, setActiveEntryTimePreview] = useState(null);
+
+	useEffect(
+		() => () => {
+			removeActivePointerListenersRef.current?.();
+			activeEntryTimeInteractionRef.current = null;
+			activeEntryTimePreviewRef.current = null;
+		},
+		[],
+	);
 
 	const getTimeSlotFromEvent = (date, event) =>
 		createWeekTimeSlotFromPointerEvent({
@@ -67,6 +77,7 @@ export function useWeekDndInteractions({
 			event,
 			workHours,
 			timeSlotMinutes,
+			hourHeight,
 		});
 	const getTimeSlotFromPoint = (date, point) => {
 		const gridElement = gridRef.current;
@@ -78,7 +89,7 @@ export function useWeekDndInteractions({
 			date,
 			pointerY: getWeekBodyPointerYFromPoint({ point, gridElement }),
 			workHours,
-			hourHeight: WEEK_HOUR_HEIGHT,
+			hourHeight,
 			timeSlotMinutes,
 		});
 	};
@@ -119,12 +130,14 @@ export function useWeekDndInteractions({
 			pointerY: getWeekBodyPointerY({ event, gridElement }),
 			workHours,
 			timeSlotMinutes,
+			hourHeight,
 		});
 		const preview = createWeekEntryTimePreview({
 			change,
 			date: targetDate,
 			locale,
 			workHours,
+			hourHeight,
 		});
 		const currentPreview = activeEntryTimePreviewRef.current;
 
@@ -171,6 +184,7 @@ export function useWeekDndInteractions({
 		activeEntryTimePreviewRef.current = null;
 		setActiveEntryTimeId(entry.id);
 		setActiveEntryTimePreview(null);
+		removeActivePointerListenersRef.current?.();
 
 		const handlePointerMove = (moveEvent) => {
 			const currentInteraction = activeEntryTimeInteractionRef.current;
@@ -188,9 +202,7 @@ export function useWeekDndInteractions({
 			updateEntryTimePreview(currentInteraction, point);
 		};
 		const handlePointerUp = (upEvent) => {
-			document.removeEventListener("pointermove", handlePointerMove);
-			document.removeEventListener("pointerup", handlePointerUp);
-			document.removeEventListener("pointercancel", handlePointerCancel);
+			removePointerListeners();
 
 			const currentInteraction = activeEntryTimeInteractionRef.current;
 			const currentPreview = activeEntryTimePreviewRef.current;
@@ -217,12 +229,19 @@ export function useWeekDndInteractions({
 			});
 		};
 		const handlePointerCancel = () => {
+			removePointerListeners();
+			clearEntryTimeInteraction();
+		};
+		const removePointerListeners = () => {
 			document.removeEventListener("pointermove", handlePointerMove);
 			document.removeEventListener("pointerup", handlePointerUp);
 			document.removeEventListener("pointercancel", handlePointerCancel);
-			clearEntryTimeInteraction();
+			if (removeActivePointerListenersRef.current === removePointerListeners) {
+				removeActivePointerListenersRef.current = null;
+			}
 		};
 
+		removeActivePointerListenersRef.current = removePointerListeners;
 		document.addEventListener("pointermove", handlePointerMove);
 		document.addEventListener("pointerup", handlePointerUp);
 		document.addEventListener("pointercancel", handlePointerCancel);

@@ -114,16 +114,21 @@ export function CalendarMonthView(inProps) {
 	const resolvedMonthLayout = resolveMonthLayout(monthLayout);
 	const filteredMonthDates = dates.filter((date) => (showWeekend ? true : date.isoWeekday() <= 5));
 	const monthRows = chunkDates(filteredMonthDates, columnCount);
-	const firstMonthRow = monthRows[0] || [];
-	const firstMonthRowStart = firstMonthRow[0];
-	const firstMonthRowEnd = firstMonthRow.at(-1)?.add(1, "day");
-	const showMonthRowHeaders = shouldRenderRowHeaders(showRowHeaders, {
-		view: CALENDAR_VIEWS.MONTH,
-		rowIndex: 0,
-		rowStart: firstMonthRowStart,
-		rowEnd: firstMonthRowEnd,
-		dates: firstMonthRow,
+	const monthRowHeaders = monthRows.map((rowDates, rowIndex) => {
+		const ownerState = {
+			view: CALENDAR_VIEWS.MONTH,
+			rowIndex,
+			rowStart: rowDates[0],
+			rowEnd: rowDates.at(-1).add(1, "day"),
+			dates: rowDates,
+		};
+
+		return {
+			ownerState,
+			visible: shouldRenderRowHeaders(showRowHeaders, ownerState),
+		};
 	});
+	const showMonthRowHeaders = monthRowHeaders.some((rowHeader) => rowHeader.visible);
 	const monthGridMinWidth =
 		columnCount * resolvedMonthLayout.cellMinWidth +
 		(showMonthRowHeaders ? resolvedMonthLayout.rowHeaderWidth : 0);
@@ -180,15 +185,8 @@ export function CalendarMonthView(inProps) {
 			))}
 
 			{monthRows.map((rowDates, rowIndex) => {
-				const rowStart = rowDates[0];
-				const rowEnd = rowDates.at(-1).add(1, "day");
-				const ownerState = {
-					view: CALENDAR_VIEWS.MONTH,
-					rowIndex,
-					rowStart,
-					rowEnd,
-					dates: rowDates,
-				};
+				const { ownerState, visible: showRowHeader } = monthRowHeaders[rowIndex];
+				const { rowStart, rowEnd } = ownerState;
 				const rowHeaderGutterOwnerState = { ...monthViewOwnerState, ...ownerState };
 
 				return [
@@ -200,6 +198,7 @@ export function CalendarMonthView(inProps) {
 							sx={monthRowHeaderGutterSx}
 							{...monthRowHeaderGutterSlotRest}
 						>
+						{showRowHeader && (
 							<RowHeader
 								view={CALENDAR_VIEWS.MONTH}
 								rowIndex={rowIndex}
@@ -209,6 +208,7 @@ export function CalendarMonthView(inProps) {
 								ownerState={ownerState}
 								{...rowHeaderSlotProps}
 							/>
+						)}
 						</CalendarMonthRowHeaderGutter>
 					),
 					...rowDates.map((date) => (

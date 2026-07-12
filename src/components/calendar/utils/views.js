@@ -1,5 +1,6 @@
 import dayjs from "../../../lib/dayjs";
 import { getMonthViewDates, getWeekViewDates } from "./dateRange";
+import { getValidCalendarDate, getValidCalendarOption } from "./validation";
 
 export const CALENDAR_VIEWS = {
 	WEEK: "week",
@@ -26,7 +27,8 @@ const CALENDAR_VIEW_ADAPTERS = {
 };
 
 function getCalendarViewAdapter(view) {
-	return CALENDAR_VIEW_ADAPTERS[view] || CALENDAR_VIEW_ADAPTERS[CALENDAR_VIEWS.WEEK];
+	const validView = getValidCalendarOption(view, "view", Object.values(CALENDAR_VIEWS));
+	return CALENDAR_VIEW_ADAPTERS[validView];
 }
 
 export function getVisibleDates({ view, anchorDate, showWeekend }) {
@@ -38,5 +40,7 @@ export function getNextAnchorDate({ view, anchorDate, direction }) {
 }
 
 export function getCalendarViewRange({ view, anchorDate }) {
-	return getCalendarViewAdapter(view).getRange({ anchorDate });
+	return getCalendarViewAdapter(view).getRange({
+		anchorDate: getValidCalendarDate(anchorDate, "anchorDate"),
+	});
 }

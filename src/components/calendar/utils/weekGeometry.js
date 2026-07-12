@@ -4,6 +4,33 @@ export const WEEK_HOUR_HEIGHT = 52;
 export const WEEK_HEADER_HEIGHT = 42;
 export const ROW_HEADER_GUTTER_WIDTH = 58;
 
+function getPositiveNumber(value, fallback) {
+	const number = Number(value);
+	return Number.isFinite(number) && number > 0 ? number : fallback;
+}
+
+export function resolveWeekLayout(weekLayout = {}) {
+	const hourMinHeight = getPositiveNumber(weekLayout.hourMinHeight, WEEK_HOUR_HEIGHT);
+	const hourHeight = getPositiveNumber(weekLayout.hourHeight, undefined);
+
+	return { hourHeight, hourMinHeight };
+}
+
+export function getResponsiveWeekHourHeight({ viewportHeight, workHours, weekLayout }) {
+	const { hourHeight, hourMinHeight } = resolveWeekLayout(weekLayout);
+	if (hourHeight !== undefined) {
+		return hourHeight;
+	}
+
+	const visibleHourCount = workHours.endHour - workHours.startHour;
+	const availableBodyHeight = Number(viewportHeight) - WEEK_HEADER_HEIGHT;
+	const fillingHourHeight = availableBodyHeight / visibleHourCount;
+
+	return Number.isFinite(fillingHourHeight)
+		? Math.max(hourMinHeight, fillingHourHeight)
+		: hourMinHeight;
+}
+
 export function getWeekTotalMinutes(workHours) {
 	return (workHours.endHour - workHours.startHour) * 60;
 }

@@ -51,3 +51,23 @@ export function getWeekTimeSlot({
 		minutes,
 	};
 }
+
+export function getWeekTimeSlotByIndex({
+	date,
+	index,
+	workHours,
+	hourHeight = WEEK_HOUR_HEIGHT,
+	timeSlotMinutes,
+}) {
+	const minutes = normalizeTimeSlotMinutes(timeSlotMinutes);
+	const slotCount = getWeekTotalMinutes(workHours) / minutes;
+	const normalizedIndex = Math.min(Math.max(index, 0), slotCount - 1);
+
+	return getWeekTimeSlot({
+		date,
+		pointerY: normalizedIndex * (minutes / 60) * hourHeight,
+		workHours,
+		hourHeight,
+		timeSlotMinutes: minutes,
+	});
+}

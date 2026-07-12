@@ -4,11 +4,49 @@ All notable changes to the Chronocal npm package are documented here.
 
 This project follows Semantic Versioning. Changelog sections use Keep a Changelog-style headings so humans, release tooling, and AI agents can quickly identify package impact.
 
-## Unreleased
+## 1.2.0 - 2026-07-12
+
+### Added
+
+- Added fail-fast validation for required calendar dates, entry shape, unique IDs, and valid entry ranges. Omitted or `undefined` entry ends remain valid.
+- Added keyboard Week View Time Slot navigation when `onTimeSlotClick` is present. Arrow keys move through times and visible days; Enter emits the standard Time Slot payload.
+- Added focus, button semantics, and Enter activation to clickable default `CalendarItem` instances.
+- Added the `CALENDAR_CalendarWeekView.styleOverrides.keyboardTimeSlot` theme key.
+- Added `weekLayout.hourMinHeight` for responsive viewport-filling Week View geometry and `weekLayout.hourHeight` for an exact fixed ratio.
+- Added one shared-store demo workspace covering Week View scheduling/sizing and dense Month View overscroll through a single `CalendarRoot`.
+- Added package-first composition for consumer handlers on interactive Week View structural slot props.
+
+### Changed
+
+- Function-valued `showRowHeaders` now works independently for every Month or Week View row instead of using only row zero.
+- Missing entry `end` values remain valid and continue to use an effective one-hour duration without adding `end` to normalized entries.
+- `useCalendarExternalDragSource().isDragging` now reflects the active native drag lifecycle.
+- Unsupported views and work-hour preset IDs now log and throw instead of falling back to inconsistent rendered state.
+- Week View now expands its Hour Height to fill the bounded viewport unless `weekLayout.hourHeight` supplies an exact value.
+- Package-owned work-hour labels are now English or language-neutral instead of German.
+- The package now declares support for Node.js 20.19 or newer.
+
+### Fixed
+
+- Active Week View pointer listeners are now removed when an interaction completes, is cancelled, restarts, or unmounts.
+- Row Header Gutters now preserve alignment when a predicate hides only some rows.
+- External drag registry entries are removed when their source unmounts.
+
+### Accessibility
+
+- Pointer and keyboard Week View Time Slot selection now share the same callback payload and visible indicator.
+- Keyboard entry move/resize, Month View grid navigation, Space activation, and ARIA grid structure remain outside the current scope.
+
+### Stability
+
+- Passed 75 tests across 11 test files.
+- Passed ESLint, package build, demo build, native ESM import, and declaration export checks.
+- Verified the npm tarball contains `dist`, declarations, 35 readable calendar source files, the Day.js adapter, and package documentation.
+- Installed the final tarball in an isolated consumer and verified package-root exports and readable source.
 
 ### Deferred
 
-- Review `useCalendarExternalDragSource()` API stability. It currently uses native browser drag and drop, so `isDragging` is always `false` and `transform` is always `null`; either implement meaningful native drag state or document/remove misleading fields before a future breaking release.
+- Review `useCalendarExternalDragSource()` API stability. It uses native browser drag and drop, so `transform` remains `null` and `setNodeRef` remains a compatibility no-op; either give those fields native semantics or remove them in a future breaking release.
 
 ## 1.1.0 - 2026-06-26
 

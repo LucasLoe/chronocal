@@ -9,12 +9,13 @@ import {
 import { WORK_HOUR_PRESETS } from "./utils/dateRange";
 import { DEFAULT_TIME_SLOT_MINUTES, normalizeTimeSlotMinutes } from "./utils/timeSlots";
 import { formatCalendarTitle } from "./CalendarLocalizationContext";
+import { getValidCalendarDate, getValidCalendarOption } from "./utils/validation";
+
+const CALENDAR_VIEW_OPTIONS = Object.values(CALENDAR_VIEWS);
+const WORK_HOUR_PRESET_IDS = Object.values(WORK_HOUR_PRESETS).map((preset) => preset.id);
 
 function getWorkHours(workHoursPreset) {
-	return (
-		Object.values(WORK_HOUR_PRESETS).find((preset) => preset.id === workHoursPreset) ||
-		WORK_HOUR_PRESETS.WORK_EXTENDED
-	);
+	return Object.values(WORK_HOUR_PRESETS).find((preset) => preset.id === workHoursPreset);
 }
 
 export function useCalendarState({
@@ -35,29 +36,44 @@ export function useCalendarState({
 	defaultWorkHourPreset = WORK_HOUR_PRESETS.WORK_EXTENDED.id,
 	defaultTimeSlotMinutes = DEFAULT_TIME_SLOT_MINUTES,
 }) {
-	const [internalView, setInternalView] = useState(defaultView);
-	const [internalDate, setInternalDate] = useState(defaultDate ? dayjs(defaultDate) : dayjs());
+	const [internalView, setInternalView] = useState(() =>
+		getValidCalendarOption(defaultView, "defaultView", CALENDAR_VIEW_OPTIONS),
+	);
+	const [internalDate, setInternalDate] = useState(() =>
+		getValidCalendarDate(defaultDate ?? dayjs(), "defaultDate"),
+	);
 	const [internalShowWeekend, setInternalShowWeekend] = useState(defaultShowWeekend);
-	const [internalWorkHoursPreset, setInternalWorkHoursPreset] = useState(defaultWorkHourPreset);
+	const [internalWorkHoursPreset, setInternalWorkHoursPreset] = useState(() =>
+		getValidCalendarOption(
+			defaultWorkHourPreset,
+			"defaultWorkHourPreset",
+			WORK_HOUR_PRESET_IDS,
+		),
+	);
 	const [internalTimeSlotMinutes, setInternalTimeSlotMinutes] = useState(
 		normalizeTimeSlotMinutes(defaultTimeSlotMinutes),
 	);
 
-	const view = viewProp ?? internalView;
-	const anchorDate = dayjs(dateProp ?? internalDate);
+	const view = getValidCalendarOption(viewProp ?? internalView, "view", CALENDAR_VIEW_OPTIONS);
+	const anchorDate = getValidCalendarDate(dateProp ?? internalDate, "date");
 	const showWeekend = showWeekendProp ?? internalShowWeekend;
-	const workHoursPreset = workHoursPresetProp ?? internalWorkHoursPreset;
+	const workHoursPreset = getValidCalendarOption(
+		workHoursPresetProp ?? internalWorkHoursPreset,
+		"workHoursPreset",
+		WORK_HOUR_PRESET_IDS,
+	);
 	const timeSlotMinutes = normalizeTimeSlotMinutes(timeSlotMinutesProp ?? internalTimeSlotMinutes);
 
 	const setView = (next) => {
+		const nextView = getValidCalendarOption(next, "view passed to setView", CALENDAR_VIEW_OPTIONS);
 		if (viewProp === undefined) {
-			setInternalView(next);
+			setInternalView(nextView);
 		}
-		onViewChange?.(next);
+		onViewChange?.(nextView);
 	};
 
 	const setDate = (next) => {
-		const nextDate = dayjs(next);
+		const nextDate = getValidCalendarDate(next, "date passed to setDate");
 		if (dateProp === undefined) {
 			setInternalDate(nextDate);
 		}
@@ -74,10 +90,15 @@ export function useCalendarState({
 	};
 
 	const setWorkHoursPreset = (next) => {
+		const nextPreset = getValidCalendarOption(
+			next,
+			"preset passed to setWorkHoursPreset",
+			WORK_HOUR_PRESET_IDS,
+		);
 		if (workHoursPresetProp === undefined) {
-			setInternalWorkHoursPreset(next);
+			setInternalWorkHoursPreset(nextPreset);
 		}
-		onWorkHoursPresetChange?.(next);
+		onWorkHoursPresetChange?.(nextPreset);
 	};
 
 	const setTimeSlotMinutes = (next) => {

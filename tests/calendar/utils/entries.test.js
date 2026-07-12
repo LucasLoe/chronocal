@@ -37,6 +37,19 @@ describe("calendar entry normalization", () => {
 			start: "2026-05-18T09:00:00",
 		});
 
+		expect(entry).not.toHaveProperty("end");
+		expect(getCalendarEntryEnd(entry).format("HH:mm")).toBe("10:00");
+	});
+
+	it("allows an explicitly undefined end value", () => {
+		const entry = normalizeCalendarEntry({
+			id: "1",
+			title: "Planning",
+			start: "2026-05-18T09:00:00",
+			end: undefined,
+		});
+
+		expect(entry.end).toBeUndefined();
 		expect(getCalendarEntryEnd(entry).format("HH:mm")).toBe("10:00");
 	});
 });

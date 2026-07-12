@@ -20,13 +20,19 @@ Optional rendered content associated with a Calendar Row. A Row Header is suppli
 
 Row Headers are not labels arrays. The package provides a render seam so consumers can render whatever belongs there.
 
+When `showRowHeaders` is a function, it is evaluated independently for every Calendar Row.
+
 ## Row Header Gutter
 
 The optional leading area before Calendar Cells where Row Headers are rendered. In week view the default Row Header Gutter shows hour markers. In month view consumers may enable Row Headers to render week numbers, totals, icons, or any other row-specific content.
 
+If only some Row Headers are visible, empty gutter cells preserve Calendar Row alignment.
+
 ## Entry
 
 A consumer-provided calendar item with an `id`, `title`, `start`, optional `end`, and optional display metadata. Entries are normalized internally before rendering.
+
+Chronocal validates Entries before rendering. An omitted or `undefined` `end` is valid and has an effective one-hour duration where a range is required.
 
 ## Entry Range
 
@@ -52,9 +58,23 @@ A week-only snapped interaction target inside the week grid. Time Slots are used
 
 A Time Slot contains `start`, `end`, `minutes`, `index`, `top`, and `height`.
 
+Time Slots can be selected with a pointer or, when `onTimeSlotClick` is present, with package-owned keyboard controls.
+
+## Keyboard Time Slot Control
+
+A focusable Week View control that selects one Time Slot in a visible day. Arrow keys move between Time Slots and visible days; Enter emits the same selection payload as a pointer click.
+
+The control is package-owned because it depends on Week View geometry. It is themeable but is not a replaceable component slot.
+
 ## Time Slot Minutes
 
 The active Time Slot granularity in minutes. Supported values are `5`, `15`, `30`, and `60`.
+
+## Hour Height
+
+The Week View pixel height representing one hour. Time Slot, Entry, pointer, preview, and Row Header geometry derive from the same Hour Height.
+
+When no exact Hour Height is supplied, Chronocal expands it to fill the bounded calendar viewport without going below the configured minimum.
 
 ## Work Hour Preset
 

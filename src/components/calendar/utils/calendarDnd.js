@@ -1,13 +1,27 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const EXTERNAL_DRAG_MIME_TYPE = "application/x-chronocal-external-source";
 const externalDragSources = new Map();
 
 export function useCalendarExternalDragSource({ id, source }) {
 	const sourceIdRef = useRef(`calendar-external-item:${id}`);
+	const sourceRef = useRef(source);
+	const [isDragging, setIsDragging] = useState(false);
+
+	useEffect(() => {
+		sourceRef.current = source;
+	}, [source]);
+
+	useEffect(
+		() => () => {
+			externalDragSources.delete(sourceIdRef.current);
+		},
+		[],
+	);
 
 	const handleDragStart = (event) => {
-		externalDragSources.set(sourceIdRef.current, source);
+		externalDragSources.set(sourceIdRef.current, sourceRef.current);
+		setIsDragging(true);
 		event.dataTransfer?.setData(EXTERNAL_DRAG_MIME_TYPE, sourceIdRef.current);
 		event.dataTransfer?.setData("text/plain", sourceIdRef.current);
 		if (event.dataTransfer) {
@@ -17,6 +31,7 @@ export function useCalendarExternalDragSource({ id, source }) {
 
 	const handleDragEnd = () => {
 		externalDragSources.delete(sourceIdRef.current);
+		setIsDragging(false);
 	};
 
 	return {
@@ -24,7 +39,7 @@ export function useCalendarExternalDragSource({ id, source }) {
 		listeners: { onDragStart: handleDragStart, onDragEnd: handleDragEnd },
 		setNodeRef: () => {},
 		transform: null,
-		isDragging: false,
+		isDragging,
 	};
 }
 

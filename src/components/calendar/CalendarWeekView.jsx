@@ -1,10 +1,15 @@
 import { Box, Stack } from "@mui/material";
 import { styled, useThemeProps } from "@mui/material/styles";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import dayjs from "../../lib/dayjs";
-import { formatWeekHeader, useCalendarLocalization } from "./CalendarLocalizationContext";
+import {
+	formatTimeRange,
+	formatWeekHeader,
+	useCalendarLocalization,
+} from "./CalendarLocalizationContext";
 import { isSameDay } from "./utils/dateRange";
 import { normalizeCalendarEntries } from "./utils/entries";
+import { composeCalendarEventHandlers } from "./utils/eventHandlers";
 import { createCalendarItemClickHandler } from "./utils/itemEvents";
 import { shouldRenderRowHeaders } from "./utils/rowHeaders";
 import { CALENDAR_VIEWS } from "./utils/views";
@@ -13,10 +18,11 @@ import {
 	getWeekColumnHeight,
 	ROW_HEADER_GUTTER_WIDTH,
 	WEEK_HEADER_HEIGHT,
-	WEEK_HOUR_HEIGHT,
 } from "./utils/weekGeometry";
 import { trapWeekEntryPointerEvent, WEEK_ENTRY_TIME_ACTIONS } from "./utils/weekInteractions";
 import { getWeekEntryLayouts } from "./utils/weekLayout";
+import { getWeekTimeSlotByIndex } from "./utils/timeSlots";
+import { useWeekHourHeight } from "./useWeekHourHeight";
 
 const WEEK_DAY_MIN_WIDTH = 132;
 const STICKY_ROW_HEADER_Z_INDEX = 4;
@@ -59,13 +65,13 @@ const CalendarWeekColumn = styled(Box, {
 })(({ theme, ownerState }) => ({
 	position: "relative",
 	cursor: ownerState.onTimeSlotClick ? "pointer" : "default",
-	height: getWeekColumnHeight(ownerState.workHours),
+	height: getWeekColumnHeight(ownerState.workHours, ownerState.hourHeight),
 	borderRight: "1px solid",
 	borderBottom: "1px solid",
 	borderColor: theme.palette.divider,
 	boxSizing: "border-box",
 	backgroundColor: ownerState.isToday ? theme.palette.action.hover : theme.palette.background.paper,
-	backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${WEEK_HOUR_HEIGHT - 1}px, ${theme.palette.divider} ${WEEK_HOUR_HEIGHT - 1}px, ${theme.palette.divider} ${WEEK_HOUR_HEIGHT}px)`,
+	backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${ownerState.hourHeight - 1}px, ${theme.palette.divider} ${ownerState.hourHeight - 1}px, ${theme.palette.divider} ${ownerState.hourHeight}px)`,
 }));
 
 const CalendarWeekEntryTimePreview = styled(Box, {
@@ -121,6 +127,29 @@ const CalendarWeekTimeSlotLayer = styled(Box, {
 	zIndex: 1,
 	pointerEvents: "none",
 });
+
+const CalendarWeekKeyboardTimeSlot = styled(Box, {
+	name: "CALENDAR_CalendarWeekView",
+	slot: "KeyboardTimeSlot",
+	overridesResolver: (props, styles) => styles.keyboardTimeSlot,
+})(({ theme, ownerState }) => ({
+	position: "absolute",
+	top: ownerState.timeSlot.top,
+	left: 1,
+	right: 1,
+	height: ownerState.timeSlot.height,
+	minHeight: 2,
+	padding: 0,
+	border: 0,
+	background: "transparent",
+	pointerEvents: "none",
+	zIndex: 3,
+	"&:focus-visible": {
+		outline: `2px solid ${theme.palette.primary.main}`,
+		outlineOffset: -2,
+		backgroundColor: theme.palette.action.focus,
+	},
+}));
 
 const CalendarWeekDraggableEntry = styled(Box, {
 	name: "CALENDAR_CalendarWeekView",
@@ -194,15 +223,14 @@ const CalendarWeekRowHeaderCell = styled(Box, {
 	name: "CALENDAR_CalendarWeekView",
 	slot: "RowHeaderCell",
 	overridesResolver: (props, styles) => styles.rowHeaderCell,
-})(({ theme }) => ({
-	height: WEEK_HOUR_HEIGHT,
+})(({ theme, ownerState }) => ({
+	height: ownerState.hourHeight,
 	borderBottom: "1px solid",
 	borderColor: theme.palette.divider,
 	boxSizing: "border-box",
 }));
 
-function WeekRowHeaderGutter({ slotProps, workHours, RowHeader, rowHeaderSlotProps }) {
-	const rowCount = workHours.endHour - workHours.startHour;
+function WeekRowHeaderGutter({ rowHeaders, slotProps, RowHeader, rowHeaderSlotProps }) {
 	const { sx: weekRowHeaderGutterSx, ...weekRowHeaderGutterSlotRest } =
 		slotProps.weekRowHeaderGutter || {};
 	const { sx: weekRowHeaderCornerSx, ...weekRowHeaderCornerSlotRest } =
@@ -220,20 +248,8 @@ function WeekRowHeaderGutter({ slotProps, workHours, RowHeader, rowHeaderSlotPro
 				sx={weekRowHeaderCornerSx}
 				{...weekRowHeaderCornerSlotRest}
 			/>
-			{Array.from({ length: rowCount }, (_, rowIndex) => {
-				const rowStart = dayjs()
-					.hour(workHours.startHour + rowIndex)
-					.minute(0)
-					.second(0)
-					.millisecond(0);
-				const rowEnd = rowStart.add(1, "hour");
-				const ownerState = {
-					view: CALENDAR_VIEWS.WEEK,
-					rowIndex,
-					rowStart,
-					rowEnd,
-				};
-
+			{rowHeaders.map(({ ownerState, visible }) => {
+				const { rowIndex, rowStart, rowEnd } = ownerState;
 				return (
 					<CalendarWeekRowHeaderCell
 						key={rowStart.format("HH:mm")}
@@ -241,14 +257,16 @@ function WeekRowHeaderGutter({ slotProps, workHours, RowHeader, rowHeaderSlotPro
 						sx={weekRowHeaderCellSx}
 						{...weekRowHeaderCellSlotRest}
 					>
-						<RowHeader
-							view={CALENDAR_VIEWS.WEEK}
-							rowIndex={rowIndex}
-							rowStart={rowStart}
-							rowEnd={rowEnd}
-							ownerState={ownerState}
-							{...rowHeaderSlotProps}
-						/>
+						{visible && (
+							<RowHeader
+								view={CALENDAR_VIEWS.WEEK}
+								rowIndex={rowIndex}
+								rowStart={rowStart}
+								rowEnd={rowEnd}
+								ownerState={ownerState}
+								{...rowHeaderSlotProps}
+							/>
+						)}
 					</CalendarWeekRowHeaderCell>
 				);
 			})}
@@ -266,8 +284,9 @@ export function CalendarWeekView(inProps) {
 	onItemClick,
 	onTimeSlotClick,
 	showRowHeaders,
-	showWeekend,
-	slots,
+		showWeekend,
+		weekLayout,
+		slots,
 	slotProps = {},
 	timeSlotMinutes,
 	view = CALENDAR_VIEWS.WEEK,
@@ -291,30 +310,69 @@ export function CalendarWeekView(inProps) {
 	const { sx: weekHeaderSx, ...weekHeaderSlotRest } = slotProps.weekHeader || {};
 	const { sx: weekHeaderLabelSx, ...weekHeaderLabelSlotRest } =
 		slotProps.weekHeaderLabel || {};
-	const { sx: weekColumnSx, ...weekColumnSlotRest } = slotProps.weekColumn || {};
+	const {
+		sx: weekColumnSx,
+		onClick: weekColumnOnClick,
+		onDragOver: weekColumnOnDragOver,
+		onDrop: weekColumnOnDrop,
+		onPointerLeave: weekColumnOnPointerLeave,
+		onPointerMove: weekColumnOnPointerMove,
+		...weekColumnSlotRest
+	} = slotProps.weekColumn || {};
 	const { sx: weekEntryTimePreviewSx, ...weekEntryTimePreviewSlotRest } =
 		slotProps.weekEntryTimePreview || {};
 	const { sx: weekEntryTimePreviewLabelSx, ...weekEntryTimePreviewLabelSlotRest } =
 		slotProps.weekEntryTimePreviewLabel || {};
 	const { sx: weekTimeSlotLayerSx, ...weekTimeSlotLayerSlotRest } =
 		slotProps.weekTimeSlotLayer || {};
-	const { sx: weekDraggableEntrySx, ...weekDraggableEntrySlotRest } =
-		slotProps.weekDraggableEntry || {};
-	const { sx: weekResizeHandleSx, ...weekResizeHandleSlotRest } =
-		slotProps.weekResizeHandle || {};
+	const {
+		sx: weekDraggableEntrySx,
+		onClick: weekDraggableEntryOnClick,
+		onPointerDown: weekDraggableEntryOnPointerDown,
+		onPointerEnter: weekDraggableEntryOnPointerEnter,
+		onPointerMove: weekDraggableEntryOnPointerMove,
+		...weekDraggableEntrySlotRest
+	} = slotProps.weekDraggableEntry || {};
+	const {
+		sx: weekResizeHandleSx,
+		onClick: weekResizeHandleOnClick,
+		onPointerDown: weekResizeHandleOnPointerDown,
+		...weekResizeHandleSlotRest
+	} = slotProps.weekResizeHandle || {};
 	const normalizedEntries = normalizeCalendarEntries(entries);
+	const weekViewRef = useRef(null);
 	const weekGridRef = useRef(null);
-	const firstWeekRowStart = dayjs().hour(workHours.startHour).minute(0).second(0).millisecond(0);
-	const showWeekRowHeaders = shouldRenderRowHeaders(showRowHeaders, {
-		view: CALENDAR_VIEWS.WEEK,
-		rowIndex: 0,
-		rowStart: firstWeekRowStart,
-		rowEnd: firstWeekRowStart.add(1, "hour"),
-	});
+	const keyboardTimeSlotRefs = useRef(new Map());
+	const [keyboardTimeSlot, setKeyboardTimeSlot] = useState(null);
+	const hourHeight = useWeekHourHeight({ rootRef: weekViewRef, weekLayout, workHours });
+	const weekRowHeaders = Array.from(
+		{ length: workHours.endHour - workHours.startHour },
+		(_, rowIndex) => {
+			const rowStart = dayjs(dates[0] ?? dayjs())
+				.hour(workHours.startHour + rowIndex)
+				.minute(0)
+				.second(0)
+				.millisecond(0);
+			const ownerState = {
+				view: CALENDAR_VIEWS.WEEK,
+				rowIndex,
+				rowStart,
+				rowEnd: rowStart.add(1, "hour"),
+				hourHeight,
+			};
+
+			return {
+				ownerState,
+				visible: shouldRenderRowHeaders(showRowHeaders, ownerState),
+			};
+		},
+	);
+	const showWeekRowHeaders = weekRowHeaders.some((rowHeader) => rowHeader.visible);
 	const weekGridMinWidth =
 		columnCount * WEEK_DAY_MIN_WIDTH + (showWeekRowHeaders ? ROW_HEADER_GUTTER_WIDTH : 0);
 	const weekViewOwnerState = {
 		columnCount,
+		hourHeight,
 		showWeekRowHeaders,
 		view,
 		weekGridMinWidth,
@@ -342,7 +400,46 @@ export function CalendarWeekView(inProps) {
 		timeSlotMinutes,
 		view,
 		workHours,
+		hourHeight,
 	});
+	const getKeyboardTimeSlot = (date, index = 0) =>
+		getWeekTimeSlotByIndex({ date, index, workHours, timeSlotMinutes, hourHeight });
+	const handleKeyboardTimeSlotFocus = (date, timeSlot) => () => {
+		setKeyboardTimeSlot({ dateKey: date.format("YYYY-MM-DD"), date, timeSlot });
+	};
+	const handleKeyboardTimeSlotKeyDown = (date, timeSlot) => (event) => {
+		if (event.key === "Enter") {
+			event.preventDefault();
+			event.stopPropagation();
+			onTimeSlotClick?.({
+				start: timeSlot.start,
+				end: timeSlot.end,
+				date,
+				view,
+				timeSlotMinutes: timeSlot.minutes,
+			});
+			return;
+		}
+
+		const dateIndex = dates.findIndex((visibleDate) => visibleDate.isSame(date, "day"));
+		const indexChange = event.key === "ArrowUp" ? -1 : event.key === "ArrowDown" ? 1 : 0;
+		const dateChange = event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" ? 1 : 0;
+
+		if (!indexChange && !dateChange) {
+			return;
+		}
+
+		event.preventDefault();
+		event.stopPropagation();
+		const targetDate = dates[Math.min(Math.max(dateIndex + dateChange, 0), dates.length - 1)];
+		const nextTimeSlot = getKeyboardTimeSlot(targetDate, timeSlot.index + indexChange);
+		const targetDateKey = targetDate.format("YYYY-MM-DD");
+		setKeyboardTimeSlot({ dateKey: targetDateKey, date: targetDate, timeSlot: nextTimeSlot });
+
+		if (dateChange) {
+			keyboardTimeSlotRefs.current.get(targetDateKey)?.focus();
+		}
+	};
 
 	return (
 		<CalendarWeekViewRoot
@@ -350,11 +447,12 @@ export function CalendarWeekView(inProps) {
 			ownerState={weekViewOwnerState}
 			sx={weekRootSx}
 			{...weekRootSlotRest}
+			ref={weekViewRef}
 		>
 			{showWeekRowHeaders && (
 				<WeekRowHeaderGutter
+					rowHeaders={weekRowHeaders}
 					slotProps={slotProps}
-					workHours={workHours}
 					RowHeader={RowHeader}
 					rowHeaderSlotProps={rowHeaderSlotProps}
 				/>
@@ -387,17 +485,28 @@ export function CalendarWeekView(inProps) {
 
 					{dates.map((date) => {
 						const dateKey = date.format("YYYY-MM-DD");
+						const columnKeyboardTimeSlot =
+							keyboardTimeSlot?.dateKey === dateKey
+								? keyboardTimeSlot.timeSlot
+								: getKeyboardTimeSlot(date, keyboardTimeSlot?.timeSlot.index ?? 0);
+						const visibleTimeSlot =
+							hoveredTimeSlot?.dateKey === dateKey
+								? hoveredTimeSlot.timeSlot
+								: keyboardTimeSlot?.dateKey === dateKey
+									? keyboardTimeSlot.timeSlot
+									: null;
 						const columnEntryTimePreview =
 							activeEntryTimePreview?.dateKey === dateKey ? activeEntryTimePreview : null;
 						const positionedEntries = getWeekEntryLayouts({
 							entries: normalizedEntries,
 							date,
 							workHours,
-							hourHeight: WEEK_HOUR_HEIGHT,
+							hourHeight,
 						});
 						const entryOwnerState = {
 							date,
 							entries: positionedEntries,
+							hourHeight,
 							view,
 						};
 						const columnOwnerState = {
@@ -411,15 +520,51 @@ export function CalendarWeekView(inProps) {
 							<CalendarWeekColumn
 								key={dateKey}
 								data-calendar-week-column={dateKey}
-								onDragOver={handleWeekColumnDragOver(date)}
-								onDrop={handleWeekColumnDrop(date)}
-								onPointerMove={handleWeekColumnPointerMove(date)}
-								onPointerLeave={handleWeekColumnPointerLeave}
-								onClick={handleWeekColumnClick(date)}
+								onDragOver={composeCalendarEventHandlers(
+									handleWeekColumnDragOver(date),
+									weekColumnOnDragOver,
+								)}
+								onDrop={composeCalendarEventHandlers(
+									handleWeekColumnDrop(date),
+									weekColumnOnDrop,
+								)}
+								onPointerMove={composeCalendarEventHandlers(
+									handleWeekColumnPointerMove(date),
+									weekColumnOnPointerMove,
+								)}
+								onPointerLeave={composeCalendarEventHandlers(
+									handleWeekColumnPointerLeave,
+									weekColumnOnPointerLeave,
+								)}
+								onClick={composeCalendarEventHandlers(
+									handleWeekColumnClick(date),
+									weekColumnOnClick,
+								)}
 								ownerState={columnOwnerState}
 								sx={weekColumnSx}
 								{...weekColumnSlotRest}
 							>
+								{onTimeSlotClick && (
+									<CalendarWeekKeyboardTimeSlot
+										component='button'
+										type='button'
+										ref={(element) => {
+											if (element) {
+												keyboardTimeSlotRefs.current.set(dateKey, element);
+											} else {
+												keyboardTimeSlotRefs.current.delete(dateKey);
+											}
+										}}
+										aria-label={`${(locale ? date.locale(locale) : date).format("dddd, D MMMM YYYY")}, ${formatTimeRange(columnKeyboardTimeSlot.start, columnKeyboardTimeSlot.end, locale)}`}
+										ownerState={{ date, timeSlot: columnKeyboardTimeSlot, view }}
+										onClick={(event) => {
+											event.preventDefault();
+											event.stopPropagation();
+										}}
+										onFocus={handleKeyboardTimeSlotFocus(date, columnKeyboardTimeSlot)}
+										onKeyDown={handleKeyboardTimeSlotKeyDown(date, columnKeyboardTimeSlot)}
+									/>
+								)}
 								{columnEntryTimePreview && (
 									<CalendarWeekEntryTimePreview
 										data-calendar-week-entry-time-preview={columnEntryTimePreview.id}
@@ -437,20 +582,20 @@ export function CalendarWeekView(inProps) {
 										</CalendarWeekEntryTimePreviewLabel>
 									</CalendarWeekEntryTimePreview>
 								)}
-								{hoveredTimeSlot?.dateKey === dateKey && (
+								{visibleTimeSlot && (
 									<CalendarWeekTimeSlotLayer
-										ownerState={{ ...columnOwnerState, timeSlot: hoveredTimeSlot.timeSlot }}
+										ownerState={{ ...columnOwnerState, timeSlot: visibleTimeSlot }}
 										sx={weekTimeSlotLayerSx}
 										{...weekTimeSlotLayerSlotRest}
 									>
 										<TimeSlotIndicator
 											date={date}
 											view={view}
-											timeSlot={hoveredTimeSlot.timeSlot}
+											timeSlot={visibleTimeSlot}
 											ownerState={{
 												date,
 												view,
-												timeSlot: hoveredTimeSlot.timeSlot,
+												timeSlot: visibleTimeSlot,
 											}}
 											sx={[timeSlotIndicatorSx, { pointerEvents: "none" }]}
 											{...timeSlotIndicatorSlotRest}
@@ -474,6 +619,22 @@ export function CalendarWeekView(inProps) {
 											slotOnClick: itemSlotOnClick,
 											onItemClick,
 										});
+										const movePointerDown = getWeekEntryTimePointerProps({
+											action: WEEK_ENTRY_TIME_ACTIONS.MOVE,
+											date,
+											disabled: !onEntryTimeChange,
+											entry,
+										}).onPointerDown;
+										const resizeStartPointerDown = getWeekEntryTimePointerProps({
+											action: WEEK_ENTRY_TIME_ACTIONS.RESIZE_START,
+											date,
+											entry,
+										}).onPointerDown;
+										const resizeEndPointerDown = getWeekEntryTimePointerProps({
+											action: WEEK_ENTRY_TIME_ACTIONS.RESIZE_END,
+											date,
+											entry,
+										}).onPointerDown;
 
 										return (
 											<CalendarWeekDraggableEntry
@@ -482,31 +643,39 @@ export function CalendarWeekView(inProps) {
 												ownerState={{
 													date,
 													entry,
+													hourHeight,
 													isActiveEntryTimeEntry,
 													layout,
 													onEntryTimeChange,
 													view,
 												}}
-												{...getWeekEntryTimePointerProps({
-													action: WEEK_ENTRY_TIME_ACTIONS.MOVE,
-													date,
-													disabled: !onEntryTimeChange,
-													entry,
-												})}
-												onPointerEnter={handleWeekItemPointerEnter}
-												onPointerMove={trapWeekEntryPointerEvent}
-												onClick={handleWeekItemClick(itemClickHandler)}
+												onPointerDown={composeCalendarEventHandlers(
+													movePointerDown,
+													weekDraggableEntryOnPointerDown,
+												)}
+												onPointerEnter={composeCalendarEventHandlers(
+													handleWeekItemPointerEnter,
+													weekDraggableEntryOnPointerEnter,
+												)}
+												onPointerMove={composeCalendarEventHandlers(
+													trapWeekEntryPointerEvent,
+													weekDraggableEntryOnPointerMove,
+												)}
+												onClick={composeCalendarEventHandlers(
+													handleWeekItemClick(itemClickHandler),
+													weekDraggableEntryOnClick,
+												)}
 												sx={weekDraggableEntrySx}
 												{...weekDraggableEntrySlotRest}
 											>
 												<Item
 													item={entry}
 													entry={entry}
-											date={date}
-											view={view}
-											layout={layout}
+													date={date}
+													view={view}
+													layout={layout}
 													onClick={handleWeekItemClick(itemClickHandler)}
-													ownerState={{ date, item: entry, entry, view, layout }}
+													ownerState={{ date, item: entry, entry, view, layout, hourHeight }}
 													{...itemSlotRest}
 												/>
 												{onEntryTimeChange && (
@@ -519,12 +688,14 @@ export function CalendarWeekView(inProps) {
 																entry,
 																view,
 															}}
-															{...getWeekEntryTimePointerProps({
-																action: WEEK_ENTRY_TIME_ACTIONS.RESIZE_START,
-																date,
-																entry,
-															})}
-															onClick={trapWeekEntryPointerEvent}
+															onPointerDown={composeCalendarEventHandlers(
+																resizeStartPointerDown,
+																weekResizeHandleOnPointerDown,
+															)}
+															onClick={composeCalendarEventHandlers(
+																trapWeekEntryPointerEvent,
+																weekResizeHandleOnClick,
+															)}
 															sx={weekResizeHandleSx}
 															{...weekResizeHandleSlotRest}
 														/>
@@ -536,12 +707,14 @@ export function CalendarWeekView(inProps) {
 																entry,
 																view,
 															}}
-															{...getWeekEntryTimePointerProps({
-																action: WEEK_ENTRY_TIME_ACTIONS.RESIZE_END,
-																date,
-																entry,
-															})}
-															onClick={trapWeekEntryPointerEvent}
+															onPointerDown={composeCalendarEventHandlers(
+																resizeEndPointerDown,
+																weekResizeHandleOnPointerDown,
+															)}
+															onClick={composeCalendarEventHandlers(
+																trapWeekEntryPointerEvent,
+																weekResizeHandleOnClick,
+															)}
 															sx={weekResizeHandleSx}
 															{...weekResizeHandleSlotRest}
 														/>

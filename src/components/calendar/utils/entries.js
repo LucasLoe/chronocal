@@ -1,17 +1,17 @@
 import dayjs from "../../../lib/dayjs";
+import {
+	normalizeAndValidateCalendarEntries,
+	normalizeAndValidateCalendarEntry,
+} from "./validation";
 
 const DEFAULT_ENTRY_DURATION_MINUTES = 60;
 
 export function normalizeCalendarEntry(entry) {
-	return {
-		...entry,
-		start: dayjs(entry.start),
-		end: entry.end == null ? undefined : dayjs(entry.end),
-	};
+	return normalizeAndValidateCalendarEntry(entry, 0);
 }
 
 export function normalizeCalendarEntries(entries = []) {
-	return entries.map((entry) => normalizeCalendarEntry(entry));
+	return normalizeAndValidateCalendarEntries(entries);
 }
 
 export function getCalendarEntryEnd(entry) {

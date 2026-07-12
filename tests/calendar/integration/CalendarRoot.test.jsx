@@ -108,13 +108,20 @@ function CalendarRangeProbe() {
 }
 
 function ExternalDragSource({ source }) {
-	const { attributes, listeners, setNodeRef } = useCalendarExternalDragSource({
+	const { attributes, listeners, setNodeRef, isDragging } = useCalendarExternalDragSource({
 		id: source.id,
 		source,
 	});
 
 	return (
-		<button type='button' data-testid='external-drag-source' ref={setNodeRef} {...attributes} {...listeners}>
+		<button
+			type='button'
+			data-testid='external-drag-source'
+			data-dragging={isDragging}
+			ref={setNodeRef}
+			{...attributes}
+			{...listeners}
+		>
 			{source.title}
 		</button>
 	);
@@ -465,6 +472,27 @@ describe("CalendarRoot", () => {
 		});
 	});
 
+	it("composes package and consumer Week View column handlers", () => {
+		const handleTimeSlotClick = vi.fn();
+		const handleColumnClick = vi.fn();
+		const { container } = render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.WEEK}
+				date='2026-05-18'
+				entries={[]}
+				onTimeSlotClick={handleTimeSlotClick}
+				slotProps={{ weekColumn: { onClick: handleColumnClick } }}
+			/>,
+		);
+		const column = container.querySelector('[data-calendar-week-column="2026-05-18"]');
+		column.getBoundingClientRect = () => ({ top: 0 });
+
+		fireEvent.click(column, { clientY: 78 });
+
+		expect(handleTimeSlotClick).toHaveBeenCalledTimes(1);
+		expect(handleColumnClick).toHaveBeenCalledTimes(1);
+	});
+
 	it("renders wrapped public month cell and weekday header slots", () => {
 		render(
 			<CalendarRoot
@@ -525,6 +553,24 @@ describe("CalendarRoot", () => {
 		);
 
 		fireEvent.click(screen.getByTestId("wrapped-entry-a"));
+
+		expect(handleItemClick).toHaveBeenCalledWith(expect.objectContaining({ id: "a" }));
+	});
+
+	it("activates clickable default items with Enter", () => {
+		const handleItemClick = vi.fn();
+
+		render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.MONTH}
+				date='2026-05-18'
+				entries={[{ id: "a", title: "A", start: "2026-05-18T10:00:00" }]}
+				onItemClick={handleItemClick}
+			/>,
+		);
+		const item = screen.getByRole("button", { name: /10:00.*A/ });
+
+		fireEvent.keyDown(item, { key: "Enter" });
 
 		expect(handleItemClick).toHaveBeenCalledWith(expect.objectContaining({ id: "a" }));
 	});
@@ -610,6 +656,44 @@ describe("CalendarRoot", () => {
 		expect(handleTimeSlotClick.mock.calls[0][0].end.format("HH:mm")).toBe("08:00");
 	});
 
+	it("navigates and selects Week View Time Slots with the keyboard", () => {
+		const handleTimeSlotClick = vi.fn();
+
+		render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.WEEK}
+				date='2026-05-18'
+				entries={[]}
+				timeSlotMinutes={30}
+				onTimeSlotClick={handleTimeSlotClick}
+				slots={{ timeSlotIndicator: TestTimeSlotIndicator }}
+			/>,
+		);
+		const monday = screen.getByRole("button", {
+			name: "Monday, 18 May 2026, 06:00-06:30",
+		});
+
+		fireEvent.focus(monday);
+		expect(screen.getByTestId("time-slot-indicator")).toHaveTextContent("06:00-06:30");
+
+		fireEvent.keyDown(monday, { key: "ArrowDown" });
+		expect(screen.getByTestId("time-slot-indicator")).toHaveTextContent("06:30-07:00");
+
+		fireEvent.keyDown(monday, { key: "ArrowRight" });
+		const tuesday = screen.getByRole("button", {
+			name: "Tuesday, 19 May 2026, 06:30-07:00",
+		});
+		expect(tuesday).toHaveFocus();
+
+		fireEvent.keyDown(tuesday, { key: "Enter" });
+
+		expect(handleTimeSlotClick).toHaveBeenCalledTimes(1);
+		expect(handleTimeSlotClick.mock.calls[0][0].start.format("YYYY-MM-DDTHH:mm")).toBe(
+			"2026-05-19T06:30",
+		);
+		expect(handleTimeSlotClick.mock.calls[0][0].end.format("HH:mm")).toBe("07:00");
+	});
+
 	it("sets a minimum width on week columns for mobile scrolling", () => {
 		const { container } = render(
 			<CalendarRoot view={CALENDAR_VIEWS.WEEK} date='2026-05-18' entries={[]} />,
@@ -617,6 +701,21 @@ describe("CalendarRoot", () => {
 
 		expect(container.querySelector('[data-calendar-week-view-grid="true"]')).toHaveStyle({
 			minWidth: "982px",
+		});
+	});
+
+	it("applies an exact Week View hour height override", () => {
+		const { container } = render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.WEEK}
+				date='2026-05-18'
+				entries={[]}
+				weekLayout={{ hourHeight: 64 }}
+			/>,
+		);
+
+		expect(container.querySelector('[data-calendar-week-column="2026-05-18"]')).toHaveStyle({
+			height: "1024px",
 		});
 	});
 
@@ -739,6 +838,39 @@ describe("CalendarRoot", () => {
 		);
 	});
 
+	it("evaluates Row Header predicates for each row and preserves aligned gutters", () => {
+		const monthPredicate = vi.fn(({ rowIndex }) => rowIndex % 2 === 0);
+		const { container, rerender } = render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.MONTH}
+				date='2026-05-18'
+				entries={[]}
+				showRowHeaders={monthPredicate}
+				slots={{ rowHeader: TestRowHeader }}
+			/>,
+		);
+
+		expect(monthPredicate.mock.calls.map(([context]) => context.rowIndex)).toEqual([0, 1, 2, 3, 4]);
+		expect(screen.getByTestId("row-header-month-0")).toBeInTheDocument();
+		expect(screen.queryByTestId("row-header-month-1")).not.toBeInTheDocument();
+		expect(container.querySelector('[data-calendar-month-row-header="2026-05-04"]')).toBeEmptyDOMElement();
+
+		const weekPredicate = vi.fn(({ rowIndex }) => rowIndex === 1);
+		rerender(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.WEEK}
+				date='2026-05-18'
+				entries={[]}
+				showRowHeaders={weekPredicate}
+				slots={{ rowHeader: TestRowHeader }}
+			/>,
+		);
+
+		expect(weekPredicate).toHaveBeenCalledTimes(16);
+		expect(screen.queryByTestId("row-header-week-0")).not.toBeInTheDocument();
+		expect(screen.getByTestId("row-header-week-1")).toBeInTheDocument();
+	});
+
 	it("normalizes controlled and uncontrolled time slot minute state", () => {
 		const handleTimeSlotMinutesChange = vi.fn();
 		const { rerender } = render(
@@ -762,6 +894,18 @@ describe("CalendarRoot", () => {
 		);
 
 		expect(screen.getByTestId("time-slot-state")).toHaveTextContent("30");
+	});
+
+	it("rejects unsupported controlled view and work-hour preset values", () => {
+		const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+
+		expect(() => render(<CalendarRoot view='agenda' entries={[]} />)).toThrow(
+			'[Chronocal] Invalid view "agenda". Expected one of: week, month.',
+		);
+		expect(() => render(<CalendarRoot workHoursPreset='custom' entries={[]} />)).toThrow(
+			'[Chronocal] Invalid workHoursPreset "custom". Expected one of: full-day, 6-22.',
+		);
+		consoleError.mockRestore();
 	});
 
 	it("renders week entries without committing pointer changes before movement", () => {
@@ -929,6 +1073,18 @@ describe("CalendarRoot", () => {
 		expect(payload).not.toHaveProperty("over");
 	});
 
+	it("exposes native external drag state", () => {
+		render(<ExternalDragSource source={{ id: "template-a", title: "Template A" }} />);
+		const source = screen.getByTestId("external-drag-source");
+		const dataTransfer = createDataTransfer();
+
+		expect(source).toHaveAttribute("data-dragging", "false");
+		fireNativeDragEvent(source, "dragstart", { dataTransfer });
+		expect(source).toHaveAttribute("data-dragging", "true");
+		fireNativeDragEvent(source, "dragend", { dataTransfer });
+		expect(source).toHaveAttribute("data-dragging", "false");
+	});
+
 	it("ignores external drag sources dropped outside week columns", async () => {
 		const handleExternalItemDrop = vi.fn();
 		const { container } = render(
@@ -1082,5 +1238,46 @@ describe("CalendarRoot", () => {
 		);
 		expect(screen.queryByTestId("time-slot-indicator")).not.toBeInTheDocument();
 		fireEvent.pointerUp(document, { clientX: 50, clientY: 312, isPrimary: true, pointerId: 1 });
+	});
+
+	it("removes active Week View pointer listeners when unmounted", () => {
+		const { container, unmount } = render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.WEEK}
+				date='2026-05-18'
+				entries={[
+					{
+						id: "a",
+						title: "A",
+						start: "2026-05-18T10:00:00",
+						end: "2026-05-18T11:00:00",
+					},
+				]}
+				onEntryTimeChange={() => {}}
+			/>,
+		);
+		setupWeekDragGeometry(container);
+		const addEventListener = vi.spyOn(document, "addEventListener");
+		const removeEventListener = vi.spyOn(document, "removeEventListener");
+
+		fireEvent.pointerDown(container.querySelector('[data-calendar-week-entry="a"]'), {
+			button: 0,
+			clientX: 50,
+			clientY: 260,
+			pointerId: 1,
+		});
+		const activeListeners = Object.fromEntries(
+			["pointermove", "pointerup", "pointercancel"].map((type) => [
+				type,
+				addEventListener.mock.calls.find(([eventType]) => eventType === type)?.[1],
+			]),
+		);
+
+		unmount();
+
+		for (const [type, listener] of Object.entries(activeListeners)) {
+			expect(listener).toEqual(expect.any(Function));
+			expect(removeEventListener).toHaveBeenCalledWith(type, listener);
+		}
 	});
 });

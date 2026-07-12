@@ -22,6 +22,9 @@ const CalendarItemRoot = styled(Box, {
 	overflow: "hidden",
 	backgroundColor: ownerState.calendarItem.color || theme.palette.secondary.light,
 	color: theme.palette.secondary.contrastText,
+	border: 0,
+	font: "inherit",
+	textAlign: "left",
 	cursor: ownerState.clickable ? "pointer" : "default",
 	transition: "box-shadow 140ms ease, transform 140ms ease",
 	"&:hover": {
@@ -59,14 +62,29 @@ export function CalendarItem(inProps) {
 	const { locale } = useCalendarLocalization();
 	const calendarItem = entry || item;
 	const ownerState = { ...rest.ownerState, calendarItem, clickable: Boolean(rest.onClick) };
+	const slotOnKeyDown = rest.onKeyDown;
 
 	delete rest.date;
 	delete rest.view;
 	delete rest.layout;
 	delete rest.ownerState;
+	delete rest.onKeyDown;
+
+	const handleKeyDown = ownerState.clickable
+		? (event) => {
+				slotOnKeyDown?.(event);
+				if (!event.defaultPrevented && event.key === "Enter") {
+					event.preventDefault();
+					rest.onClick(event);
+				}
+			}
+		: slotOnKeyDown;
 
 	return (
 		<CalendarItemRoot
+			role={ownerState.clickable ? "button" : undefined}
+			tabIndex={ownerState.clickable ? 0 : undefined}
+			onKeyDown={handleKeyDown}
 			ownerState={ownerState}
 			sx={sx}
 			{...rest}
