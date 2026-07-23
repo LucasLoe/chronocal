@@ -4,6 +4,35 @@ All notable changes to the Chronocal npm package are documented here.
 
 This project follows Semantic Versioning. Changelog sections use Keep a Changelog-style headings so humans, release tooling, and AI agents can quickly identify package impact.
 
+## 1.3.0 - 2026-07-23
+
+### Changed
+
+- Stabilized `CalendarRoot` and localization context values so consumers do not redraw when their calendar inputs are unchanged.
+- Split per-day Week View rendering into an internal `WeekdayColumn` component without changing public exports, slots, or callback behavior.
+- Moved generated demo output to the ignored `build` directory instead of committing bundled vendor code.
+- Updated the demo to import calendar modules directly while package consumers continue to import from `@lucasloe/chronocal`.
+
+### Fixed
+
+- Month weekday headers now use stable ISO weekday identities instead of array-index keys.
+- Time Slot state normalization now runs only during initial state creation.
+- Removed an unused demo entry-update export.
+
+### Performance
+
+- Entry sorting now uses immutable `Array.prototype.toSorted()` without an intermediate spread copy.
+- Week entry clipping and filtering now use one normalization pass instead of a chained map and filter.
+
+### Security
+
+- Added pnpm release-age and trust-downgrade policies to reduce dependency supply-chain risk.
+
+### Stability
+
+- Passed 76 tests across 11 test files, ESLint, package builds, runtime export checks, and declaration checks.
+- Verified React Doctor reports no findings with a score of 100/100.
+
 ## 1.2.0 - 2026-07-12
 
 ### Added
