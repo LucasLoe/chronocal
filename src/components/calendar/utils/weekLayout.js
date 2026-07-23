@@ -60,23 +60,28 @@ export function getWeekEntryLayouts({ entries, date, workHours, hourHeight = WEE
 		.second(59);
 	const { visibleStart, visibleEnd } = getWeekVisibleRange(date, workHours);
 
-	const normalized = getEntriesForDateRange(entries, dayStart, dayEnd)
-		.map((entry) => {
-			const entryStart = dayjs(entry.start);
-			const entryEnd = getCalendarEntryEnd(entry);
-			const clippedStart = entryStart.isBefore(visibleStart) ? visibleStart : entryStart;
-			const clippedEnd = entryEnd.isAfter(visibleEnd) ? visibleEnd : entryEnd;
+	const normalized = [];
 
-			return {
-				...entry,
-				clippedStart,
-				clippedEnd,
-				startMin: clippedStart.diff(visibleStart, "minute"),
-				endMin: clippedEnd.diff(visibleStart, "minute"),
-			};
-		})
-		.filter((entry) => entry.endMin > entry.startMin)
-		.sort((left, right) => left.startMin - right.startMin);
+	for (const entry of getEntriesForDateRange(entries, dayStart, dayEnd)) {
+		const entryStart = dayjs(entry.start);
+		const entryEnd = getCalendarEntryEnd(entry);
+		const clippedStart = entryStart.isBefore(visibleStart) ? visibleStart : entryStart;
+		const clippedEnd = entryEnd.isAfter(visibleEnd) ? visibleEnd : entryEnd;
+		const startMin = clippedStart.diff(visibleStart, "minute");
+		const endMin = clippedEnd.diff(visibleStart, "minute");
+
+		if (endMin <= startMin) continue;
+
+		normalized.push({
+			...entry,
+			clippedStart,
+			clippedEnd,
+			startMin,
+			endMin,
+		});
+	}
+
+	normalized.sort((left, right) => left.startMin - right.startMin);
 
 	return layoutOverlappingEvents(normalized).map((entry) => {
 		const { top, height } = getWeekEntryRangeLayout({

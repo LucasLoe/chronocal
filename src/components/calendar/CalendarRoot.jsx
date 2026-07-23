@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
 import { styled, useThemeProps } from "@mui/material/styles";
+import { useMemo } from "react";
 import { CalendarContext } from "./calendarContext";
 import { CalendarCell } from "./CalendarCell";
 import { CalendarCellHeader } from "./CalendarCellHeader";
@@ -15,6 +16,9 @@ import { CalendarWeekHeader } from "./CalendarWeekHeader";
 import { useCalendarState } from "./useCalendarState";
 import { CALENDAR_VIEWS } from "./utils/views";
 import { WORK_HOUR_PRESETS } from "./utils/dateRange";
+
+const EMPTY_SLOTS = {};
+const EMPTY_SLOT_PROPS = {};
 
 const CalendarRootRoot = styled(Box, {
 	name: "CALENDAR_CalendarRoot",
@@ -52,8 +56,8 @@ export function CalendarRoot(inProps) {
 	defaultWorkHourPreset = WORK_HOUR_PRESETS.WORK_EXTENDED.id,
 	defaultTimeSlotMinutes,
 	showRowHeaders,
-	slots = {},
-	slotProps = {},
+	slots = EMPTY_SLOTS,
+	slotProps = EMPTY_SLOT_PROPS,
 	locale: localeProp,
 	children,
 	gridSx,
@@ -71,35 +75,49 @@ export function CalendarRoot(inProps) {
 		onViewChange,
 		onDateChange,
 		onShowWeekendChange,
-	onWorkHoursPresetChange,
-	onTimeSlotMinutesChange,
-	locale,
+		onWorkHoursPresetChange,
+		onTimeSlotMinutesChange,
+		locale,
 		defaultView,
 		defaultDate,
 		defaultShowWeekend,
 		defaultWorkHourPreset,
 		defaultTimeSlotMinutes,
 	});
-	const resolvedSlots = {
-		cell: CalendarCell,
-		cellHeader: CalendarCellHeader,
-		entry: CalendarEntry,
-		item: CalendarItem,
-		monthWeekdayHeader: CalendarMonthWeekdayHeader,
-		rowHeader: CalendarRowHeader,
-		timeSlotIndicator: CalendarTimeSlotIndicator,
-		weekHeader: CalendarWeekHeader,
-		...slots,
-	};
-	const calendar = {
-		...calendarState,
-		slots: resolvedSlots,
-		slotProps,
-		locale,
-		onTimeSlotClick,
-		onItemClick,
-		onEntryTimeChange,
-	};
+	const resolvedSlots = useMemo(
+		() => ({
+			cell: CalendarCell,
+			cellHeader: CalendarCellHeader,
+			entry: CalendarEntry,
+			item: CalendarItem,
+			monthWeekdayHeader: CalendarMonthWeekdayHeader,
+			rowHeader: CalendarRowHeader,
+			timeSlotIndicator: CalendarTimeSlotIndicator,
+			weekHeader: CalendarWeekHeader,
+			...slots,
+		}),
+		[slots],
+	);
+	const calendar = useMemo(
+		() => ({
+			...calendarState,
+			slots: resolvedSlots,
+			slotProps,
+			locale,
+			onTimeSlotClick,
+			onItemClick,
+			onEntryTimeChange,
+		}),
+		[
+			calendarState,
+			resolvedSlots,
+			slotProps,
+			locale,
+			onTimeSlotClick,
+			onItemClick,
+			onEntryTimeChange,
+		],
+	);
 
 	return (
 		<CalendarLocalizationProvider locale={locale}>

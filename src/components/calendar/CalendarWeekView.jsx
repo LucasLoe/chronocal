@@ -274,42 +274,38 @@ function WeekRowHeaderGutter({ rowHeaders, slotProps, RowHeader, rowHeaderSlotPr
 	);
 }
 
-export function CalendarWeekView(inProps) {
-	const props = useThemeProps({ props: inProps, name: "CALENDAR_CalendarWeekView" });
-	const {
-	dates,
-	entries,
+function WeekdayColumn({
+	date,
+	getKeyboardTimeSlot,
+	handleKeyboardTimeSlotFocus,
+	handleKeyboardTimeSlotKeyDown,
+	hourHeight,
+	keyboardTimeSlot,
+	keyboardTimeSlotRefs,
+	locale,
+	normalizedEntries,
 	onEntryTimeChange,
-	onExternalItemDrop,
 	onItemClick,
 	onTimeSlotClick,
-	showRowHeaders,
-		showWeekend,
-		weekLayout,
-		slots,
-	slotProps = {},
-	timeSlotMinutes,
-	view = CALENDAR_VIEWS.WEEK,
+	slotProps,
+	slots,
+	view,
+	weekViewOwnerState,
+	weekInteractions: {
+		activeEntryTimeId, activeEntryTimePreview, getWeekEntryTimePointerProps,
+		handleWeekColumnClick, handleWeekColumnDragOver, handleWeekColumnDrop,
+		handleWeekColumnPointerLeave, handleWeekColumnPointerMove,
+		handleWeekItemClick, handleWeekItemPointerEnter, hoveredTimeSlot,
+	},
 	workHours,
-	} = props;
-	const columnCount = showWeekend ? 7 : 5;
-	const { locale } = useCalendarLocalization();
+}) {
 	const Entry = slots.entry;
-	const Header = slots.weekHeader;
 	const Item = slots.item;
-	const RowHeader = slots.rowHeader;
 	const TimeSlotIndicator = slots.timeSlotIndicator;
-	const rowHeaderSlotProps = slotProps.rowHeader || {};
 	const { sx: weekEntrySx, ...weekEntrySlotRest } = slotProps.entry || {};
 	const { onClick: itemSlotOnClick, ...itemSlotRest } = slotProps.item || {};
 	const { sx: timeSlotIndicatorSx, ...timeSlotIndicatorSlotRest } =
 		slotProps.timeSlotIndicator || {};
-	const { sx: weekRootSx, ...weekRootSlotRest } = slotProps.weekRoot || {};
-	const { sx: weekContentSx, ...weekContentSlotRest } = slotProps.weekContent || {};
-	const { sx: weekGridSx, ...weekGridSlotRest } = slotProps.weekGrid || {};
-	const { sx: weekHeaderSx, ...weekHeaderSlotRest } = slotProps.weekHeader || {};
-	const { sx: weekHeaderLabelSx, ...weekHeaderLabelSlotRest } =
-		slotProps.weekHeaderLabel || {};
 	const {
 		sx: weekColumnSx,
 		onClick: weekColumnOnClick,
@@ -339,6 +335,275 @@ export function CalendarWeekView(inProps) {
 		onPointerDown: weekResizeHandleOnPointerDown,
 		...weekResizeHandleSlotRest
 	} = slotProps.weekResizeHandle || {};
+	const dateKey = date.format("YYYY-MM-DD");
+	const columnKeyboardTimeSlot =
+		keyboardTimeSlot?.dateKey === dateKey
+			? keyboardTimeSlot.timeSlot
+			: getKeyboardTimeSlot(date, keyboardTimeSlot?.timeSlot.index ?? 0);
+	const visibleTimeSlot =
+		hoveredTimeSlot?.dateKey === dateKey
+			? hoveredTimeSlot.timeSlot
+			: keyboardTimeSlot?.dateKey === dateKey
+				? keyboardTimeSlot.timeSlot
+				: null;
+	const columnEntryTimePreview =
+		activeEntryTimePreview?.dateKey === dateKey ? activeEntryTimePreview : null;
+	const positionedEntries = getWeekEntryLayouts({
+		entries: normalizedEntries,
+		date,
+		workHours,
+		hourHeight,
+	});
+	const entryOwnerState = {
+		date,
+		entries: positionedEntries,
+		hourHeight,
+		view,
+	};
+	const columnOwnerState = {
+		...weekViewOwnerState,
+		date,
+		isToday: isSameDay(date, dayjs()),
+		onTimeSlotClick,
+	};
+
+	return (
+		<CalendarWeekColumn
+			data-calendar-week-column={dateKey}
+			onDragOver={composeCalendarEventHandlers(
+				handleWeekColumnDragOver(date),
+				weekColumnOnDragOver,
+			)}
+			onDrop={composeCalendarEventHandlers(handleWeekColumnDrop(date), weekColumnOnDrop)}
+			onPointerMove={composeCalendarEventHandlers(
+				handleWeekColumnPointerMove(date),
+				weekColumnOnPointerMove,
+			)}
+			onPointerLeave={composeCalendarEventHandlers(
+				handleWeekColumnPointerLeave,
+				weekColumnOnPointerLeave,
+			)}
+			onClick={composeCalendarEventHandlers(
+				handleWeekColumnClick(date),
+				weekColumnOnClick,
+			)}
+			ownerState={columnOwnerState}
+			sx={weekColumnSx}
+			{...weekColumnSlotRest}
+		>
+			{onTimeSlotClick && (
+				<CalendarWeekKeyboardTimeSlot
+					component='button'
+					type='button'
+					ref={(element) => {
+						if (element) {
+							keyboardTimeSlotRefs.current.set(dateKey, element);
+						} else {
+							keyboardTimeSlotRefs.current.delete(dateKey);
+						}
+					}}
+					aria-label={`${(locale ? date.locale(locale) : date).format("dddd, D MMMM YYYY")}, ${formatTimeRange(columnKeyboardTimeSlot.start, columnKeyboardTimeSlot.end, locale)}`}
+					ownerState={{ date, timeSlot: columnKeyboardTimeSlot, view }}
+					onClick={(event) => {
+						event.preventDefault();
+						event.stopPropagation();
+					}}
+					onFocus={handleKeyboardTimeSlotFocus(date, columnKeyboardTimeSlot)}
+					onKeyDown={handleKeyboardTimeSlotKeyDown(date, columnKeyboardTimeSlot)}
+				/>
+			)}
+			{columnEntryTimePreview && (
+				<CalendarWeekEntryTimePreview
+					data-calendar-week-entry-time-preview={columnEntryTimePreview.id}
+					ownerState={columnEntryTimePreview}
+					sx={weekEntryTimePreviewSx}
+					{...weekEntryTimePreviewSlotRest}
+				>
+					<CalendarWeekEntryTimePreviewLabel
+						data-calendar-week-entry-time-preview-label={columnEntryTimePreview.id}
+						ownerState={columnEntryTimePreview}
+						sx={weekEntryTimePreviewLabelSx}
+						{...weekEntryTimePreviewLabelSlotRest}
+					>
+						{columnEntryTimePreview.label}
+					</CalendarWeekEntryTimePreviewLabel>
+				</CalendarWeekEntryTimePreview>
+			)}
+			{visibleTimeSlot && (
+				<CalendarWeekTimeSlotLayer
+					ownerState={{ ...columnOwnerState, timeSlot: visibleTimeSlot }}
+					sx={weekTimeSlotLayerSx}
+					{...weekTimeSlotLayerSlotRest}
+				>
+					<TimeSlotIndicator
+						date={date}
+						view={view}
+						timeSlot={visibleTimeSlot}
+						ownerState={{
+							date,
+							view,
+							timeSlot: visibleTimeSlot,
+						}}
+						sx={[timeSlotIndicatorSx, { pointerEvents: "none" }]}
+						{...timeSlotIndicatorSlotRest}
+					/>
+				</CalendarWeekTimeSlotLayer>
+			)}
+			<Entry
+				date={date}
+				entries={positionedEntries}
+				view={view}
+				ownerState={entryOwnerState}
+				sx={[{ position: "absolute", inset: 0 }, weekEntrySx]}
+				{...weekEntrySlotRest}
+			>
+				{positionedEntries.map((entry) => {
+					const { layout } = entry;
+					const isActiveEntryTimeEntry =
+						activeEntryTimeId === entry.id || activeEntryTimePreview?.id === entry.id;
+					const itemClickHandler = createCalendarItemClickHandler({
+						item: entry,
+						slotOnClick: itemSlotOnClick,
+						onItemClick,
+					});
+					const movePointerDown = getWeekEntryTimePointerProps({
+						action: WEEK_ENTRY_TIME_ACTIONS.MOVE,
+						date,
+						disabled: !onEntryTimeChange,
+						entry,
+					}).onPointerDown;
+					const resizeStartPointerDown = getWeekEntryTimePointerProps({
+						action: WEEK_ENTRY_TIME_ACTIONS.RESIZE_START,
+						date,
+						entry,
+					}).onPointerDown;
+					const resizeEndPointerDown = getWeekEntryTimePointerProps({
+						action: WEEK_ENTRY_TIME_ACTIONS.RESIZE_END,
+						date,
+						entry,
+					}).onPointerDown;
+
+					return (
+						<CalendarWeekDraggableEntry
+							key={entry.id}
+							data-calendar-week-entry={entry.id}
+							ownerState={{
+								date,
+								entry,
+								hourHeight,
+								isActiveEntryTimeEntry,
+								layout,
+								onEntryTimeChange,
+								view,
+							}}
+							onPointerDown={composeCalendarEventHandlers(
+								movePointerDown,
+								weekDraggableEntryOnPointerDown,
+							)}
+							onPointerEnter={composeCalendarEventHandlers(
+								handleWeekItemPointerEnter,
+								weekDraggableEntryOnPointerEnter,
+							)}
+							onPointerMove={composeCalendarEventHandlers(
+								trapWeekEntryPointerEvent,
+								weekDraggableEntryOnPointerMove,
+							)}
+							onClick={composeCalendarEventHandlers(
+								handleWeekItemClick(itemClickHandler),
+								weekDraggableEntryOnClick,
+							)}
+							sx={weekDraggableEntrySx}
+							{...weekDraggableEntrySlotRest}
+						>
+							<Item
+								item={entry}
+								entry={entry}
+								date={date}
+								view={view}
+								layout={layout}
+								onClick={handleWeekItemClick(itemClickHandler)}
+								ownerState={{ date, item: entry, entry, view, layout, hourHeight }}
+								{...itemSlotRest}
+							/>
+							{onEntryTimeChange && (
+								<>
+									<CalendarWeekResizeHandle
+										data-calendar-week-resize-handle={`${entry.id}-start`}
+										ownerState={{
+											action: WEEK_ENTRY_TIME_ACTIONS.RESIZE_START,
+											date,
+											entry,
+											view,
+										}}
+										onPointerDown={composeCalendarEventHandlers(
+											resizeStartPointerDown,
+											weekResizeHandleOnPointerDown,
+										)}
+										onClick={composeCalendarEventHandlers(
+											trapWeekEntryPointerEvent,
+											weekResizeHandleOnClick,
+										)}
+										sx={weekResizeHandleSx}
+										{...weekResizeHandleSlotRest}
+									/>
+									<CalendarWeekResizeHandle
+										data-calendar-week-resize-handle={`${entry.id}-end`}
+										ownerState={{
+											action: WEEK_ENTRY_TIME_ACTIONS.RESIZE_END,
+											date,
+											entry,
+											view,
+										}}
+										onPointerDown={composeCalendarEventHandlers(
+											resizeEndPointerDown,
+											weekResizeHandleOnPointerDown,
+										)}
+										onClick={composeCalendarEventHandlers(
+											trapWeekEntryPointerEvent,
+											weekResizeHandleOnClick,
+										)}
+										sx={weekResizeHandleSx}
+										{...weekResizeHandleSlotRest}
+									/>
+								</>
+							)}
+						</CalendarWeekDraggableEntry>
+					);
+				})}
+			</Entry>
+		</CalendarWeekColumn>
+	);
+}
+
+export function CalendarWeekView(inProps) {
+	const props = useThemeProps({ props: inProps, name: "CALENDAR_CalendarWeekView" });
+	const {
+		dates,
+		entries,
+		onEntryTimeChange,
+		onExternalItemDrop,
+		onItemClick,
+		onTimeSlotClick,
+		showRowHeaders,
+		showWeekend,
+		weekLayout,
+		slots,
+		slotProps = {},
+		timeSlotMinutes,
+		view = CALENDAR_VIEWS.WEEK,
+		workHours,
+	} = props;
+	const columnCount = showWeekend ? 7 : 5;
+	const { locale } = useCalendarLocalization();
+	const Header = slots.weekHeader;
+	const RowHeader = slots.rowHeader;
+	const rowHeaderSlotProps = slotProps.rowHeader || {};
+	const { sx: weekRootSx, ...weekRootSlotRest } = slotProps.weekRoot || {};
+	const { sx: weekContentSx, ...weekContentSlotRest } = slotProps.weekContent || {};
+	const { sx: weekGridSx, ...weekGridSlotRest } = slotProps.weekGrid || {};
+	const { sx: weekHeaderSx, ...weekHeaderSlotRest } = slotProps.weekHeader || {};
+	const { sx: weekHeaderLabelSx, ...weekHeaderLabelSlotRest } =
+		slotProps.weekHeaderLabel || {};
 	const normalizedEntries = normalizeCalendarEntries(entries);
 	const weekViewRef = useRef(null);
 	const weekGridRef = useRef(null);
@@ -378,19 +643,7 @@ export function CalendarWeekView(inProps) {
 		weekGridMinWidth,
 		workHours,
 	};
-	const {
-		activeEntryTimeId,
-		activeEntryTimePreview,
-		getWeekEntryTimePointerProps,
-		handleWeekColumnClick,
-		handleWeekColumnDragOver,
-		handleWeekColumnDrop,
-		handleWeekColumnPointerLeave,
-		handleWeekColumnPointerMove,
-		handleWeekItemClick,
-		handleWeekItemPointerEnter,
-		hoveredTimeSlot,
-	} = useWeekDndInteractions({
+	const weekInteractions = useWeekDndInteractions({
 		dates,
 		gridRef: weekGridRef,
 		locale,
@@ -483,250 +736,29 @@ export function CalendarWeekView(inProps) {
 						/>
 					))}
 
-					{dates.map((date) => {
-						const dateKey = date.format("YYYY-MM-DD");
-						const columnKeyboardTimeSlot =
-							keyboardTimeSlot?.dateKey === dateKey
-								? keyboardTimeSlot.timeSlot
-								: getKeyboardTimeSlot(date, keyboardTimeSlot?.timeSlot.index ?? 0);
-						const visibleTimeSlot =
-							hoveredTimeSlot?.dateKey === dateKey
-								? hoveredTimeSlot.timeSlot
-								: keyboardTimeSlot?.dateKey === dateKey
-									? keyboardTimeSlot.timeSlot
-									: null;
-						const columnEntryTimePreview =
-							activeEntryTimePreview?.dateKey === dateKey ? activeEntryTimePreview : null;
-						const positionedEntries = getWeekEntryLayouts({
-							entries: normalizedEntries,
-							date,
-							workHours,
-							hourHeight,
-						});
-						const entryOwnerState = {
-							date,
-							entries: positionedEntries,
-							hourHeight,
-							view,
-						};
-						const columnOwnerState = {
-							...weekViewOwnerState,
-							date,
-							isToday: isSameDay(date, dayjs()),
-							onTimeSlotClick,
-						};
-
-						return (
-							<CalendarWeekColumn
-								key={dateKey}
-								data-calendar-week-column={dateKey}
-								onDragOver={composeCalendarEventHandlers(
-									handleWeekColumnDragOver(date),
-									weekColumnOnDragOver,
-								)}
-								onDrop={composeCalendarEventHandlers(
-									handleWeekColumnDrop(date),
-									weekColumnOnDrop,
-								)}
-								onPointerMove={composeCalendarEventHandlers(
-									handleWeekColumnPointerMove(date),
-									weekColumnOnPointerMove,
-								)}
-								onPointerLeave={composeCalendarEventHandlers(
-									handleWeekColumnPointerLeave,
-									weekColumnOnPointerLeave,
-								)}
-								onClick={composeCalendarEventHandlers(
-									handleWeekColumnClick(date),
-									weekColumnOnClick,
-								)}
-								ownerState={columnOwnerState}
-								sx={weekColumnSx}
-								{...weekColumnSlotRest}
-							>
-								{onTimeSlotClick && (
-									<CalendarWeekKeyboardTimeSlot
-										component='button'
-										type='button'
-										ref={(element) => {
-											if (element) {
-												keyboardTimeSlotRefs.current.set(dateKey, element);
-											} else {
-												keyboardTimeSlotRefs.current.delete(dateKey);
-											}
-										}}
-										aria-label={`${(locale ? date.locale(locale) : date).format("dddd, D MMMM YYYY")}, ${formatTimeRange(columnKeyboardTimeSlot.start, columnKeyboardTimeSlot.end, locale)}`}
-										ownerState={{ date, timeSlot: columnKeyboardTimeSlot, view }}
-										onClick={(event) => {
-											event.preventDefault();
-											event.stopPropagation();
-										}}
-										onFocus={handleKeyboardTimeSlotFocus(date, columnKeyboardTimeSlot)}
-										onKeyDown={handleKeyboardTimeSlotKeyDown(date, columnKeyboardTimeSlot)}
-									/>
-								)}
-								{columnEntryTimePreview && (
-									<CalendarWeekEntryTimePreview
-										data-calendar-week-entry-time-preview={columnEntryTimePreview.id}
-										ownerState={columnEntryTimePreview}
-										sx={weekEntryTimePreviewSx}
-										{...weekEntryTimePreviewSlotRest}
-									>
-										<CalendarWeekEntryTimePreviewLabel
-											data-calendar-week-entry-time-preview-label={columnEntryTimePreview.id}
-											ownerState={columnEntryTimePreview}
-											sx={weekEntryTimePreviewLabelSx}
-											{...weekEntryTimePreviewLabelSlotRest}
-										>
-											{columnEntryTimePreview.label}
-										</CalendarWeekEntryTimePreviewLabel>
-									</CalendarWeekEntryTimePreview>
-								)}
-								{visibleTimeSlot && (
-									<CalendarWeekTimeSlotLayer
-										ownerState={{ ...columnOwnerState, timeSlot: visibleTimeSlot }}
-										sx={weekTimeSlotLayerSx}
-										{...weekTimeSlotLayerSlotRest}
-									>
-										<TimeSlotIndicator
-											date={date}
-											view={view}
-											timeSlot={visibleTimeSlot}
-											ownerState={{
-												date,
-												view,
-												timeSlot: visibleTimeSlot,
-											}}
-											sx={[timeSlotIndicatorSx, { pointerEvents: "none" }]}
-											{...timeSlotIndicatorSlotRest}
-										/>
-									</CalendarWeekTimeSlotLayer>
-								)}
-								<Entry
-									date={date}
-								entries={positionedEntries}
-								view={view}
-								ownerState={entryOwnerState}
-									sx={[{ position: "absolute", inset: 0 }, weekEntrySx]}
-									{...weekEntrySlotRest}
-								>
-									{positionedEntries.map((entry) => {
-										const { layout } = entry;
-										const isActiveEntryTimeEntry =
-											activeEntryTimeId === entry.id || activeEntryTimePreview?.id === entry.id;
-										const itemClickHandler = createCalendarItemClickHandler({
-											item: entry,
-											slotOnClick: itemSlotOnClick,
-											onItemClick,
-										});
-										const movePointerDown = getWeekEntryTimePointerProps({
-											action: WEEK_ENTRY_TIME_ACTIONS.MOVE,
-											date,
-											disabled: !onEntryTimeChange,
-											entry,
-										}).onPointerDown;
-										const resizeStartPointerDown = getWeekEntryTimePointerProps({
-											action: WEEK_ENTRY_TIME_ACTIONS.RESIZE_START,
-											date,
-											entry,
-										}).onPointerDown;
-										const resizeEndPointerDown = getWeekEntryTimePointerProps({
-											action: WEEK_ENTRY_TIME_ACTIONS.RESIZE_END,
-											date,
-											entry,
-										}).onPointerDown;
-
-										return (
-											<CalendarWeekDraggableEntry
-												key={entry.id}
-												data-calendar-week-entry={entry.id}
-												ownerState={{
-													date,
-													entry,
-													hourHeight,
-													isActiveEntryTimeEntry,
-													layout,
-													onEntryTimeChange,
-													view,
-												}}
-												onPointerDown={composeCalendarEventHandlers(
-													movePointerDown,
-													weekDraggableEntryOnPointerDown,
-												)}
-												onPointerEnter={composeCalendarEventHandlers(
-													handleWeekItemPointerEnter,
-													weekDraggableEntryOnPointerEnter,
-												)}
-												onPointerMove={composeCalendarEventHandlers(
-													trapWeekEntryPointerEvent,
-													weekDraggableEntryOnPointerMove,
-												)}
-												onClick={composeCalendarEventHandlers(
-													handleWeekItemClick(itemClickHandler),
-													weekDraggableEntryOnClick,
-												)}
-												sx={weekDraggableEntrySx}
-												{...weekDraggableEntrySlotRest}
-											>
-												<Item
-													item={entry}
-													entry={entry}
-													date={date}
-													view={view}
-													layout={layout}
-													onClick={handleWeekItemClick(itemClickHandler)}
-													ownerState={{ date, item: entry, entry, view, layout, hourHeight }}
-													{...itemSlotRest}
-												/>
-												{onEntryTimeChange && (
-													<>
-														<CalendarWeekResizeHandle
-															data-calendar-week-resize-handle={`${entry.id}-start`}
-															ownerState={{
-																action: WEEK_ENTRY_TIME_ACTIONS.RESIZE_START,
-																date,
-																entry,
-																view,
-															}}
-															onPointerDown={composeCalendarEventHandlers(
-																resizeStartPointerDown,
-																weekResizeHandleOnPointerDown,
-															)}
-															onClick={composeCalendarEventHandlers(
-																trapWeekEntryPointerEvent,
-																weekResizeHandleOnClick,
-															)}
-															sx={weekResizeHandleSx}
-															{...weekResizeHandleSlotRest}
-														/>
-														<CalendarWeekResizeHandle
-															data-calendar-week-resize-handle={`${entry.id}-end`}
-															ownerState={{
-																action: WEEK_ENTRY_TIME_ACTIONS.RESIZE_END,
-																date,
-																entry,
-																view,
-															}}
-															onPointerDown={composeCalendarEventHandlers(
-																resizeEndPointerDown,
-																weekResizeHandleOnPointerDown,
-															)}
-															onClick={composeCalendarEventHandlers(
-																trapWeekEntryPointerEvent,
-																weekResizeHandleOnClick,
-															)}
-															sx={weekResizeHandleSx}
-															{...weekResizeHandleSlotRest}
-														/>
-													</>
-												)}
-											</CalendarWeekDraggableEntry>
-										);
-									})}
-								</Entry>
-							</CalendarWeekColumn>
-						);
-					})}
+					{dates.map((date) => (
+						<WeekdayColumn
+							key={date.format("YYYY-MM-DD")}
+							date={date}
+							getKeyboardTimeSlot={getKeyboardTimeSlot}
+							handleKeyboardTimeSlotFocus={handleKeyboardTimeSlotFocus}
+							handleKeyboardTimeSlotKeyDown={handleKeyboardTimeSlotKeyDown}
+							hourHeight={hourHeight}
+							keyboardTimeSlot={keyboardTimeSlot}
+							keyboardTimeSlotRefs={keyboardTimeSlotRefs}
+							locale={locale}
+							normalizedEntries={normalizedEntries}
+							onEntryTimeChange={onEntryTimeChange}
+							onItemClick={onItemClick}
+							onTimeSlotClick={onTimeSlotClick}
+							slotProps={slotProps}
+							slots={slots}
+							view={view}
+							weekInteractions={weekInteractions}
+							weekViewOwnerState={weekViewOwnerState}
+							workHours={workHours}
+						/>
+					))}
 				</CalendarWeekViewGrid>
 			</CalendarWeekViewContent>
 		</CalendarWeekViewRoot>

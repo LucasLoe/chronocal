@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import "dayjs/locale/de";
+import { useEffect } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { CalendarCell } from "../../../src/components/calendar/CalendarCell";
 import { CalendarItem } from "../../../src/components/calendar/CalendarItem";
@@ -105,6 +106,16 @@ function CalendarRangeProbe() {
 			{calendar.range.start.format("YYYY-MM-DD")}/{calendar.range.end.format("YYYY-MM-DD")}
 		</div>
 	);
+}
+
+function CalendarContextIdentityProbe({ onValue }) {
+	const calendar = useCalendar();
+
+	useEffect(() => {
+		onValue(calendar);
+	}, [calendar, onValue]);
+
+	return null;
 }
 
 function ExternalDragSource({ source }) {
@@ -262,6 +273,26 @@ function startDragPointer(element, { from, to }) {
 }
 
 describe("CalendarRoot", () => {
+	it("preserves the calendar context value when its inputs do not change", () => {
+		const contextValues = [];
+		const recordContextValue = (value) => contextValues.push(value);
+		const entries = [];
+		const { rerender } = render(
+			<CalendarRoot entries={entries}>
+				<CalendarContextIdentityProbe onValue={recordContextValue} />
+			</CalendarRoot>,
+		);
+		const initialValue = contextValues[0];
+
+		rerender(
+			<CalendarRoot entries={entries}>
+				<CalendarContextIdentityProbe onValue={recordContextValue} />
+			</CalendarRoot>,
+		);
+
+		expect(contextValues).toEqual([initialValue]);
+	});
+
 	it("renders string and native Date entries through normalized slot items", () => {
 		render(
 			<CalendarRoot

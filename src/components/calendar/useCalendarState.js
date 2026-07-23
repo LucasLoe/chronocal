@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import dayjs from "../../lib/dayjs";
 import {
 	CALENDAR_VIEWS,
@@ -51,11 +51,14 @@ export function useCalendarState({
 		),
 	);
 	const [internalTimeSlotMinutes, setInternalTimeSlotMinutes] = useState(
-		normalizeTimeSlotMinutes(defaultTimeSlotMinutes),
+		() => normalizeTimeSlotMinutes(defaultTimeSlotMinutes),
 	);
 
 	const view = getValidCalendarOption(viewProp ?? internalView, "view", CALENDAR_VIEW_OPTIONS);
-	const anchorDate = getValidCalendarDate(dateProp ?? internalDate, "date");
+	const anchorDate = useMemo(
+		() => getValidCalendarDate(dateProp ?? internalDate, "date"),
+		[dateProp, internalDate],
+	);
 	const showWeekend = showWeekendProp ?? internalShowWeekend;
 	const workHoursPreset = getValidCalendarOption(
 		workHoursPresetProp ?? internalWorkHoursPreset,
@@ -64,32 +67,32 @@ export function useCalendarState({
 	);
 	const timeSlotMinutes = normalizeTimeSlotMinutes(timeSlotMinutesProp ?? internalTimeSlotMinutes);
 
-	const setView = (next) => {
+	const setView = useCallback((next) => {
 		const nextView = getValidCalendarOption(next, "view passed to setView", CALENDAR_VIEW_OPTIONS);
 		if (viewProp === undefined) {
 			setInternalView(nextView);
 		}
 		onViewChange?.(nextView);
-	};
+	}, [viewProp, onViewChange]);
 
-	const setDate = (next) => {
+	const setDate = useCallback((next) => {
 		const nextDate = getValidCalendarDate(next, "date passed to setDate");
 		if (dateProp === undefined) {
 			setInternalDate(nextDate);
 		}
 		onDateChange?.(nextDate);
-	};
+	}, [dateProp, onDateChange]);
 
-	const setShowWeekend = (next) => {
+	const setShowWeekend = useCallback((next) => {
 		const nextValue = Boolean(next);
 
 		if (showWeekendProp === undefined) {
 			setInternalShowWeekend(nextValue);
 		}
 		onShowWeekendChange?.(nextValue);
-	};
+	}, [showWeekendProp, onShowWeekendChange]);
 
-	const setWorkHoursPreset = (next) => {
+	const setWorkHoursPreset = useCallback((next) => {
 		const nextPreset = getValidCalendarOption(
 			next,
 			"preset passed to setWorkHoursPreset",
@@ -99,16 +102,16 @@ export function useCalendarState({
 			setInternalWorkHoursPreset(nextPreset);
 		}
 		onWorkHoursPresetChange?.(nextPreset);
-	};
+	}, [workHoursPresetProp, onWorkHoursPresetChange]);
 
-	const setTimeSlotMinutes = (next) => {
+	const setTimeSlotMinutes = useCallback((next) => {
 		const nextValue = normalizeTimeSlotMinutes(next);
 
 		if (timeSlotMinutesProp === undefined) {
 			setInternalTimeSlotMinutes(nextValue);
 		}
 		onTimeSlotMinutesChange?.(nextValue);
-	};
+	}, [timeSlotMinutesProp, onTimeSlotMinutesChange]);
 
 	const workHours = useMemo(() => getWorkHours(workHoursPreset), [workHoursPreset]);
 	const visibleDates = useMemo(
@@ -120,24 +123,50 @@ export function useCalendarState({
 		[view, anchorDate],
 	);
 	const title = formatCalendarTitle({ view, date: anchorDate, locale });
+	const navigate = useCallback(
+		(direction) => setDate(getNextAnchorDate({ view, anchorDate, direction })),
+		[view, anchorDate, setDate],
+	);
+	const today = useCallback(() => setDate(dayjs()), [setDate]);
 
-	return {
-		view,
-		date: anchorDate,
-		title,
-		showWeekend,
-		workHoursPreset,
-		workHours,
-		timeSlotMinutes,
-		visibleDates,
-		range,
-		locale,
-		setView,
-		setDate,
-		setShowWeekend,
-		setWorkHoursPreset,
-		setTimeSlotMinutes,
-		navigate: (direction) => setDate(getNextAnchorDate({ view, anchorDate, direction })),
-		today: () => setDate(dayjs()),
-	};
+	return useMemo(
+		() => ({
+			view,
+			date: anchorDate,
+			title,
+			showWeekend,
+			workHoursPreset,
+			workHours,
+			timeSlotMinutes,
+			visibleDates,
+			range,
+			locale,
+			setView,
+			setDate,
+			setShowWeekend,
+			setWorkHoursPreset,
+			setTimeSlotMinutes,
+			navigate,
+			today,
+		}),
+		[
+			view,
+			anchorDate,
+			title,
+			showWeekend,
+			workHoursPreset,
+			workHours,
+			timeSlotMinutes,
+			visibleDates,
+			range,
+			locale,
+			setView,
+			setDate,
+			setShowWeekend,
+			setWorkHoursPreset,
+			setTimeSlotMinutes,
+			navigate,
+			today,
+		],
+	);
 }

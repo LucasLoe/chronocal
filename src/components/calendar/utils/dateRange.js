@@ -8,13 +8,16 @@ export const WORK_HOUR_PRESETS = {
 
 export const WORK_HOUR_PRESET_OPTIONS = Object.values(WORK_HOUR_PRESETS);
 
-export function getWeekdayLabels({ showWeekend, locale }) {
+export function getWeekdayHeaders({ showWeekend, locale }) {
 	const weekStart = dayjs("2026-05-18").startOf("isoWeek");
-	const labels = Array.from({ length: 7 }, (_, index) => {
+	const headers = Array.from({ length: 7 }, (_, index) => {
 		const date = weekStart.add(index, "day");
-		return (locale ? date.locale(locale) : date).format("dd");
+		return {
+			id: date.isoWeekday(),
+			label: (locale ? date.locale(locale) : date).format("dd"),
+		};
 	});
-	return showWeekend ? labels : labels.slice(0, 5);
+	return showWeekend ? headers : headers.slice(0, 5);
 }
 
 export function getMonthViewDates(anchorDate) {
@@ -39,7 +42,7 @@ export function isSameDay(a, b) {
 }
 
 export function sortEntriesByStart(entries) {
-	return [...entries].sort(
+	return entries.toSorted(
 		(left, right) => dayjs(left.start).valueOf() - dayjs(right.start).valueOf(),
 	);
 }

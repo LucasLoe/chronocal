@@ -16,16 +16,14 @@ import {
 	Typography,
 } from "@mui/material";
 import { useState } from "react";
-import {
-	CalendarLocalizationProvider,
-	CalendarRoot,
-	CalendarTopbar,
-	CALENDAR_VIEWS,
-	TIME_SLOT_MINUTE_OPTIONS,
-	useCalendar,
-	useCalendarExternalDragSource,
-	WORK_HOUR_PRESET_OPTIONS,
-} from "./components/calendar";
+import { CalendarLocalizationProvider } from "./components/calendar/CalendarLocalizationProvider";
+import { CalendarRoot } from "./components/calendar/CalendarRoot";
+import { CalendarTopbar } from "./components/calendar/CalendarTopbar";
+import { useCalendar } from "./components/calendar/useCalendar";
+import { useCalendarExternalDragSource } from "./components/calendar/utils/calendarDnd";
+import { WORK_HOUR_PRESET_OPTIONS } from "./components/calendar/utils/dateRange";
+import { TIME_SLOT_MINUTE_OPTIONS } from "./components/calendar/utils/timeSlots";
+import { CALENDAR_VIEWS } from "./components/calendar/utils/views";
 import { categoryFilters } from "./demo/calendarSampleData";
 import { demoCalendarProps, hourHeightModes } from "./demo/demoCalendarConfig";
 import { DemoStoreProvider, useDemoStore } from "./demo/demoStore";

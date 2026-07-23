@@ -368,7 +368,3 @@ export const categoryFilters = [
 	"Support",
 	"Admin",
 ];
-
-export function updateCalendarSampleEntryTime(entries, { id, start, end }) {
-	return entries.map((entry) => (entry.id === id ? { ...entry, start, end } : entry));
-}
