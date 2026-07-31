@@ -10,6 +10,7 @@ import { CalendarRoot } from "../../../src/components/calendar/CalendarRoot";
 import { CalendarWeekHeader } from "../../../src/components/calendar/CalendarWeekHeader";
 import { useCalendar } from "../../../src/components/calendar/useCalendar";
 import { useCalendarExternalDragSource } from "../../../src/components/calendar/utils/calendarDnd";
+import { WORK_HOUR_PRESETS } from "../../../src/components/calendar/utils/dateRange";
 import { CALENDAR_VIEWS } from "../../../src/components/calendar/utils/views";
 
 function TestItem({ item, ownerState }) {
@@ -1152,6 +1153,24 @@ describe("CalendarRoot", () => {
 		consoleError.mockRestore();
 	});
 
+	it("preserves the built-in full-day preset ID", () => {
+		expect(WORK_HOUR_PRESETS.FULL_DAY).toEqual({
+			id: "full-day",
+			label: "Full day",
+			startHour: 0,
+			endHour: 24,
+		});
+		render(
+			<CalendarRoot entries={[]} workHoursPreset='full-day'>
+				<WorkHoursStateProbe />
+			</CalendarRoot>,
+		);
+
+		expect(screen.getByTestId("work-hours-state")).toHaveTextContent(
+			"full-day/Full day/0-24/Full day,06:00-22:00",
+		);
+	});
+
 	it("rejects unsupported controlled view and work-hour preset values", () => {
 		const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -1159,7 +1178,7 @@ describe("CalendarRoot", () => {
 			'[Chronocal] Invalid view "agenda". Expected one of: week, month.',
 		);
 		expect(() => render(<CalendarRoot workHoursPreset='custom' entries={[]} />)).toThrow(
-			'[Chronocal] Invalid workHoursPreset "custom". Expected one of: 0-24, 6-22.',
+			'[Chronocal] Invalid workHoursPreset "custom". Expected one of: full-day, 6-22.',
 		);
 		consoleError.mockRestore();
 	});

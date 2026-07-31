@@ -293,10 +293,7 @@ function CalendarControls({ filter, onFilterChange, sizeMode, onSizeModeChange }
 						onChange={(event) => calendar.setWorkHoursPreset(event.target.value)}
 					>
 						{calendar.workHourPresets.map((option) => (
-							<MenuItem
-								key={`${option.start}-${option.end}`}
-								value={`${option.start}-${option.end}`}
-							>
+							<MenuItem key={option.id} value={option.id}>
 								{option.label}
 							</MenuItem>
 						))}

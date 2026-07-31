@@ -200,7 +200,7 @@ These pairs support controlled and uncontrolled use:
 
 Unsupported Time Slot values are normalized to the nearest value in `TIME_SLOT_MINUTE_OPTIONS`: `5`, `15`, `30`, or `60`.
 
-Replace the Week View work-hour options with `workHourPresets`. The supplied array replaces the built-in array; it is not merged with it. Preset IDs are derived from their range, such as `"0-24"` and `"6-22"`.
+Replace the Week View work-hour options with `workHourPresets`. The supplied array replaces the built-in array; it is not merged with it. Custom preset IDs are derived from their range, such as `"0-24"` and `"6-22"`.
 
 ```jsx
 <CalendarRoot

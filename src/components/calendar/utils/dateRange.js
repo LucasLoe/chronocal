@@ -2,8 +2,8 @@ import dayjs from "../../../lib/dayjs";
 import { getCalendarEntryEnd } from "./entries";
 
 export const WORK_HOUR_PRESETS = {
-	FULL_DAY: { label: "Full day", start: 0, end: 24 },
-	WORK_EXTENDED: { label: "06:00-22:00", start: 6, end: 22 },
+	FULL_DAY: { id: "full-day", label: "Full day", startHour: 0, endHour: 24 },
+	WORK_EXTENDED: { id: "6-22", label: "06:00-22:00", startHour: 6, endHour: 22 },
 };
 
 export const WORK_HOUR_PRESET_OPTIONS = Object.values(WORK_HOUR_PRESETS);

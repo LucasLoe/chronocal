@@ -18,9 +18,7 @@ import { getValidCalendarDate, getValidCalendarOption } from "./utils/validation
 const CALENDAR_VIEW_OPTIONS = Object.values(CALENDAR_VIEWS);
 
 function getWorkHours(workHoursPreset, workHourPresets) {
-	const preset = workHourPresets.find(
-		(option) => getWorkHourPresetId(option) === workHoursPreset,
-	);
+	const preset = workHourPresets.find((option) => option.id === workHoursPreset);
 
 	return {
 		id: workHoursPreset,
@@ -28,6 +26,19 @@ function getWorkHours(workHoursPreset, workHourPresets) {
 		startHour: preset.start,
 		endHour: preset.end,
 	};
+}
+
+function resolveWorkHourPresets(workHourPresets) {
+	if (workHourPresets == null) {
+		return WORK_HOUR_PRESET_OPTIONS.map(({ id, label, startHour, endHour }) => ({
+			id,
+			label,
+			start: startHour,
+			end: endHour,
+		}));
+	}
+
+	return workHourPresets.map((preset) => ({ ...preset, id: getWorkHourPresetId(preset) }));
 }
 
 export function useCalendarState({
@@ -49,15 +60,18 @@ export function useCalendarState({
 	defaultWorkHourPreset,
 	defaultTimeSlotMinutes = DEFAULT_TIME_SLOT_MINUTES,
 }) {
-	const workHourPresets = workHourPresetsProp ?? WORK_HOUR_PRESET_OPTIONS;
+	const workHourPresets = useMemo(
+		() => resolveWorkHourPresets(workHourPresetsProp),
+		[workHourPresetsProp],
+	);
 	const workHourPresetIds = useMemo(
-		() => workHourPresets.map(getWorkHourPresetId),
+		() => workHourPresets.map((preset) => preset.id),
 		[workHourPresets],
 	);
 	const initialWorkHourPreset =
 		defaultWorkHourPreset ??
-		(workHourPresetIds.includes(getWorkHourPresetId(WORK_HOUR_PRESETS.WORK_EXTENDED))
-			? getWorkHourPresetId(WORK_HOUR_PRESETS.WORK_EXTENDED)
+		(workHourPresetIds.includes(WORK_HOUR_PRESETS.WORK_EXTENDED.id)
+			? WORK_HOUR_PRESETS.WORK_EXTENDED.id
 			: workHourPresetIds[0]);
 	const [internalView, setInternalView] = useState(() =>
 		getValidCalendarOption(defaultView, "defaultView", CALENDAR_VIEW_OPTIONS),

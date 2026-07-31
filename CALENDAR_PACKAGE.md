@@ -56,7 +56,7 @@ State pairs:
 - `workHoursPreset` / `defaultWorkHourPreset`
 - `timeSlotMinutes` / `defaultTimeSlotMinutes`
 
-Views and work-hour preset IDs are validated against the active options. `workHourPresets` replaces the complete built-in options array, and each ID is derived from its `start` and `end` values. Invalid controlled values, defaults, and setter inputs use the same logged `[Chronocal]` error policy as invalid dates and entries.
+Views and work-hour preset IDs are validated against the active options. `workHourPresets` replaces the complete built-in options array, and custom IDs are derived from their `start` and `end` values. Invalid controlled values, defaults, and setter inputs use the same logged `[Chronocal]` error policy as invalid dates and entries.
 
 `CalendarRoot` resolves localization and component slots, provides context, and passes rendering props to `CalendarGrid`. Remaining root props are forwarded to the grid scroll element, not the outer root.
 

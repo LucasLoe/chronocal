@@ -25,16 +25,20 @@ export type NormalizedCalendarEntry<TEntry extends CalendarEntryItem = CalendarE
 };
 
 export interface WorkHourPreset {
+	id: string;
+	label: string;
+	startHour: number;
+	endHour: number;
+}
+
+export interface WorkHourPresetOption {
 	label: string;
 	start: number;
 	end: number;
 }
 
-export interface ResolvedWorkHours {
+export interface ResolvedWorkHourPresetOption extends WorkHourPresetOption {
 	id: string;
-	label: string;
-	startHour: number;
-	endHour: number;
 }
 
 export interface CalendarRange {
@@ -382,7 +386,7 @@ export interface CalendarRootProps<TEntry extends CalendarEntryItem = CalendarEn
 	showWeekend?: boolean;
 	defaultShowWeekend?: boolean;
 	onShowWeekendChange?: (nextValue: boolean) => void;
-	workHourPresets?: WorkHourPreset[];
+	workHourPresets?: WorkHourPresetOption[];
 	workHoursPreset?: string;
 	defaultWorkHourPreset?: string;
 	onWorkHoursPresetChange?: (nextPresetId: string) => void;
@@ -412,9 +416,9 @@ export interface CalendarContextValue {
 	date: Dayjs;
 	title: string;
 	showWeekend: boolean;
-	workHourPresets: WorkHourPreset[];
+	workHourPresets: ResolvedWorkHourPresetOption[];
 	workHoursPreset: string;
-	workHours: ResolvedWorkHours;
+	workHours: WorkHourPreset;
 	timeSlotMinutes: number;
 	visibleDates: Dayjs[];
 	range: CalendarRange;
