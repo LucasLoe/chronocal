@@ -6,22 +6,35 @@ import {
 	getNextAnchorDate,
 	getVisibleDates,
 } from "./utils/views";
-import { WORK_HOUR_PRESETS } from "./utils/dateRange";
+import {
+	getWorkHourPresetId,
+	WORK_HOUR_PRESET_OPTIONS,
+	WORK_HOUR_PRESETS,
+} from "./utils/dateRange";
 import { DEFAULT_TIME_SLOT_MINUTES, normalizeTimeSlotMinutes } from "./utils/timeSlots";
 import { formatCalendarTitle } from "./CalendarLocalizationContext";
 import { getValidCalendarDate, getValidCalendarOption } from "./utils/validation";
 
 const CALENDAR_VIEW_OPTIONS = Object.values(CALENDAR_VIEWS);
-const WORK_HOUR_PRESET_IDS = Object.values(WORK_HOUR_PRESETS).map((preset) => preset.id);
 
-function getWorkHours(workHoursPreset) {
-	return Object.values(WORK_HOUR_PRESETS).find((preset) => preset.id === workHoursPreset);
+function getWorkHours(workHoursPreset, workHourPresets) {
+	const preset = workHourPresets.find(
+		(option) => getWorkHourPresetId(option) === workHoursPreset,
+	);
+
+	return {
+		id: workHoursPreset,
+		label: preset.label,
+		startHour: preset.start,
+		endHour: preset.end,
+	};
 }
 
 export function useCalendarState({
 	view: viewProp,
 	date: dateProp,
 	showWeekend: showWeekendProp,
+	workHourPresets: workHourPresetsProp,
 	workHoursPreset: workHoursPresetProp,
 	timeSlotMinutes: timeSlotMinutesProp,
 	onViewChange,
@@ -33,9 +46,19 @@ export function useCalendarState({
 	defaultView = CALENDAR_VIEWS.MONTH,
 	defaultDate,
 	defaultShowWeekend = true,
-	defaultWorkHourPreset = WORK_HOUR_PRESETS.WORK_EXTENDED.id,
+	defaultWorkHourPreset,
 	defaultTimeSlotMinutes = DEFAULT_TIME_SLOT_MINUTES,
 }) {
+	const workHourPresets = workHourPresetsProp ?? WORK_HOUR_PRESET_OPTIONS;
+	const workHourPresetIds = useMemo(
+		() => workHourPresets.map(getWorkHourPresetId),
+		[workHourPresets],
+	);
+	const initialWorkHourPreset =
+		defaultWorkHourPreset ??
+		(workHourPresetIds.includes(getWorkHourPresetId(WORK_HOUR_PRESETS.WORK_EXTENDED))
+			? getWorkHourPresetId(WORK_HOUR_PRESETS.WORK_EXTENDED)
+			: workHourPresetIds[0]);
 	const [internalView, setInternalView] = useState(() =>
 		getValidCalendarOption(defaultView, "defaultView", CALENDAR_VIEW_OPTIONS),
 	);
@@ -45,9 +68,9 @@ export function useCalendarState({
 	const [internalShowWeekend, setInternalShowWeekend] = useState(defaultShowWeekend);
 	const [internalWorkHoursPreset, setInternalWorkHoursPreset] = useState(() =>
 		getValidCalendarOption(
-			defaultWorkHourPreset,
+			initialWorkHourPreset,
 			"defaultWorkHourPreset",
-			WORK_HOUR_PRESET_IDS,
+			workHourPresetIds,
 		),
 	);
 	const [internalTimeSlotMinutes, setInternalTimeSlotMinutes] = useState(
@@ -63,7 +86,7 @@ export function useCalendarState({
 	const workHoursPreset = getValidCalendarOption(
 		workHoursPresetProp ?? internalWorkHoursPreset,
 		"workHoursPreset",
-		WORK_HOUR_PRESET_IDS,
+		workHourPresetIds,
 	);
 	const timeSlotMinutes = normalizeTimeSlotMinutes(timeSlotMinutesProp ?? internalTimeSlotMinutes);
 
@@ -96,13 +119,13 @@ export function useCalendarState({
 		const nextPreset = getValidCalendarOption(
 			next,
 			"preset passed to setWorkHoursPreset",
-			WORK_HOUR_PRESET_IDS,
+			workHourPresetIds,
 		);
 		if (workHoursPresetProp === undefined) {
 			setInternalWorkHoursPreset(nextPreset);
 		}
 		onWorkHoursPresetChange?.(nextPreset);
-	}, [workHoursPresetProp, onWorkHoursPresetChange]);
+	}, [workHoursPresetProp, onWorkHoursPresetChange, workHourPresetIds]);
 
 	const setTimeSlotMinutes = useCallback((next) => {
 		const nextValue = normalizeTimeSlotMinutes(next);
@@ -113,7 +136,10 @@ export function useCalendarState({
 		onTimeSlotMinutesChange?.(nextValue);
 	}, [timeSlotMinutesProp, onTimeSlotMinutesChange]);
 
-	const workHours = useMemo(() => getWorkHours(workHoursPreset), [workHoursPreset]);
+	const workHours = useMemo(
+		() => getWorkHours(workHoursPreset, workHourPresets),
+		[workHoursPreset, workHourPresets],
+	);
 	const visibleDates = useMemo(
 		() => getVisibleDates({ view, anchorDate, showWeekend }),
 		[view, anchorDate, showWeekend],
@@ -135,6 +161,7 @@ export function useCalendarState({
 			date: anchorDate,
 			title,
 			showWeekend,
+			workHourPresets,
 			workHoursPreset,
 			workHours,
 			timeSlotMinutes,
@@ -154,6 +181,7 @@ export function useCalendarState({
 			anchorDate,
 			title,
 			showWeekend,
+			workHourPresets,
 			workHoursPreset,
 			workHours,
 			timeSlotMinutes,

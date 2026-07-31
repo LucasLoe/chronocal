@@ -16,7 +16,6 @@ import { CalendarTimeRangePreview } from "./CalendarTimeRangePreview";
 import { CalendarWeekHeader } from "./CalendarWeekHeader";
 import { useCalendarState } from "./useCalendarState";
 import { CALENDAR_VIEWS } from "./utils/views";
-import { WORK_HOUR_PRESETS } from "./utils/dateRange";
 
 const EMPTY_SLOTS = {};
 const EMPTY_SLOT_PROPS = {};
@@ -40,6 +39,7 @@ export function CalendarRoot(inProps) {
 	view: viewProp,
 	date: dateProp,
 	showWeekend: showWeekendProp,
+	workHourPresets,
 	workHoursPreset: workHoursPresetProp,
 	timeSlotMinutes: timeSlotMinutesProp,
 	onViewChange,
@@ -55,7 +55,7 @@ export function CalendarRoot(inProps) {
 	defaultView = CALENDAR_VIEWS.MONTH,
 	defaultDate,
 	defaultShowWeekend = true,
-	defaultWorkHourPreset = WORK_HOUR_PRESETS.WORK_EXTENDED.id,
+	defaultWorkHourPreset,
 	defaultTimeSlotMinutes,
 	showRowHeaders,
 	slots = EMPTY_SLOTS,
@@ -72,6 +72,7 @@ export function CalendarRoot(inProps) {
 		view: viewProp,
 		date: dateProp,
 		showWeekend: showWeekendProp,
+		workHourPresets,
 		workHoursPreset: workHoursPresetProp,
 		timeSlotMinutes: timeSlotMinutesProp,
 		onViewChange,

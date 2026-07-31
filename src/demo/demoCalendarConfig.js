@@ -5,6 +5,11 @@ export const demoCalendarProps = {
 	defaultView: CALENDAR_VIEWS.WEEK,
 	defaultShowWeekend: false,
 	defaultTimeSlotMinutes: 15,
+	workHourPresets: [
+		{ label: "Full day", start: 0, end: 24 },
+		{ label: "06:00-22:00", start: 6, end: 22 },
+		{ label: "07:00-18:00", start: 7, end: 18 },
+	],
 	monthLayout: { cellMinWidth: 168, cellMinHeight: 184, weekdayHeaderHeight: 38 },
 	showRowHeaders: ({ view, rowIndex }) => view === CALENDAR_VIEWS.WEEK || rowIndex % 2 === 0,
 	slots: { item: DemoCalendarItem },

@@ -100,6 +100,18 @@ function CalendarStateProbe() {
 	);
 }
 
+function WorkHoursStateProbe() {
+	const calendar = useCalendar();
+
+	return (
+		<div data-testid='work-hours-state'>
+			{calendar.workHoursPreset}/{calendar.workHours.label}/{calendar.workHours.startHour}-
+			{calendar.workHours.endHour}/
+			{calendar.workHourPresets.map(({ label }) => label).join(",")}
+		</div>
+	);
+}
+
 function CalendarTitleProbe() {
 	const calendar = useCalendar();
 
@@ -1099,6 +1111,47 @@ describe("CalendarRoot", () => {
 		expect(screen.getByTestId("time-slot-state")).toHaveTextContent("30");
 	});
 
+	it("replaces the built-in work-hour presets with a custom array", () => {
+		const workHourPresets = [
+			{ label: "Office", start: 8, end: 18 },
+			{ label: "Late", start: 10, end: 20 },
+		];
+		const { rerender } = render(
+			<CalendarRoot entries={[]} workHourPresets={workHourPresets}>
+				<WorkHoursStateProbe />
+			</CalendarRoot>,
+		);
+
+		expect(screen.getByTestId("work-hours-state")).toHaveTextContent(
+			"8-18/Office/8-18/Office,Late",
+		);
+
+		rerender(
+			<CalendarRoot entries={[]} workHourPresets={workHourPresets} workHoursPreset='10-20'>
+				<WorkHoursStateProbe />
+			</CalendarRoot>,
+		);
+
+		expect(screen.getByTestId("work-hours-state")).toHaveTextContent(
+			"10-20/Late/10-20/Office,Late",
+		);
+	});
+
+	it("does not merge built-in work-hour presets into a custom array", () => {
+		const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+
+		expect(() =>
+			render(
+				<CalendarRoot
+					entries={[]}
+					workHourPresets={[{ label: "Office", start: 8, end: 18 }]}
+					workHoursPreset='6-22'
+				/>,
+			),
+		).toThrow('[Chronocal] Invalid workHoursPreset "6-22". Expected one of: 8-18.');
+		consoleError.mockRestore();
+	});
+
 	it("rejects unsupported controlled view and work-hour preset values", () => {
 		const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -1106,7 +1159,7 @@ describe("CalendarRoot", () => {
 			'[Chronocal] Invalid view "agenda". Expected one of: week, month.',
 		);
 		expect(() => render(<CalendarRoot workHoursPreset='custom' entries={[]} />)).toThrow(
-			'[Chronocal] Invalid workHoursPreset "custom". Expected one of: full-day, 6-22.',
+			'[Chronocal] Invalid workHoursPreset "custom". Expected one of: 0-24, 6-22.',
 		);
 		consoleError.mockRestore();
 	});

@@ -200,7 +200,19 @@ These pairs support controlled and uncontrolled use:
 
 Unsupported Time Slot values are normalized to the nearest value in `TIME_SLOT_MINUTE_OPTIONS`: `5`, `15`, `30`, or `60`.
 
-`useCalendar()` exposes the current values, `visibleDates`, `range`, resolved slots, locale, and the corresponding setters. `navigate(direction)` moves by month or week. `today()` moves to the current date.
+Replace the Week View work-hour options with `workHourPresets`. The supplied array replaces the built-in array; it is not merged with it. Preset IDs are derived from their range, such as `"0-24"` and `"6-22"`.
+
+```jsx
+<CalendarRoot
+	workHourPresets={[
+		{ label: "Full day", start: 0, end: 24 },
+		{ label: "06:00-22:00", start: 6, end: 22 },
+		{ label: "07:00-18:00", start: 7, end: 18 },
+	]}
+/>
+```
+
+`useCalendar()` exposes the current values, `workHourPresets`, `visibleDates`, `range`, resolved slots, locale, and the corresponding setters. `navigate(direction)` moves by month or week. `today()` moves to the current date.
 
 ## Migrating From 1.1
 
@@ -412,7 +424,6 @@ import {
 
 - Month and week views only.
 - No all-day row, recurrence, multi-day month spanning, or built-in overflow summary.
-- Two built-in work-hour presets; custom presets are not public.
 - Entry move/resize is pointer-only.
 - Native external drag support varies on mobile browsers.
 - No public timezone conversion policy.

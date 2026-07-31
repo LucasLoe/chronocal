@@ -25,7 +25,6 @@ import { CalendarRoot } from "./components/calendar/CalendarRoot";
 import { CalendarTopbar } from "./components/calendar/CalendarTopbar";
 import { useCalendar } from "./components/calendar/useCalendar";
 import { useCalendarExternalDragSource } from "./components/calendar/utils/calendarDnd";
-import { WORK_HOUR_PRESET_OPTIONS } from "./components/calendar/utils/dateRange";
 import { TIME_SLOT_MINUTE_OPTIONS } from "./components/calendar/utils/timeSlots";
 import { CALENDAR_VIEWS } from "./components/calendar/utils/views";
 import { categoryFilters } from "./demo/calendarSampleData";
@@ -293,8 +292,11 @@ function CalendarControls({ filter, onFilterChange, sizeMode, onSizeModeChange }
 						label='Hours'
 						onChange={(event) => calendar.setWorkHoursPreset(event.target.value)}
 					>
-						{WORK_HOUR_PRESET_OPTIONS.map((option) => (
-							<MenuItem key={option.id} value={option.id}>
+						{calendar.workHourPresets.map((option) => (
+							<MenuItem
+								key={`${option.start}-${option.end}`}
+								value={`${option.start}-${option.end}`}
+							>
 								{option.label}
 							</MenuItem>
 						))}

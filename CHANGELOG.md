@@ -10,6 +10,7 @@ This project follows Semantic Versioning. Changelog sections use Keep a Changelo
 
 - Added pointer-driven Week View Time Range Selection through `onTimeRangeSelect`, including upward and downward Time Slot snapping, source-day confinement, and post-drag Time Slot click suppression.
 - Added the replaceable `timeRangePreview` slot and exported `CalendarTimeRangePreview` default with a configurable `HH:mm - HH:mm` preview label.
+- Added override-only `workHourPresets` arrays using `{ label, start, end }` options and range-derived IDs.
 
 ### Stability
 
