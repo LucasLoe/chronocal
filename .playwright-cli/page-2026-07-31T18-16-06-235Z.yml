@@ -1,0 +1,128 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - text: Demo Application
+        - heading "Chronocal" [level=6] [ref=e7]
+      - button "Reset mock data" [ref=e8] [cursor=pointer]
+  - generic [ref=e10]:
+    - heading "Shared ticket and worklog workspace" [level=6] [ref=e13]
+    - generic [ref=e14]:
+      - complementary [ref=e15]:
+        - generic [ref=e16]:
+          - text: Ticket rail
+          - paragraph [ref=e17]: Create worklogs in Week View. Month View keeps the same shared data.
+        - generic [ref=e18]:
+          - generic [ref=e19]: Drag empty calendar space
+          - generic [ref=e20]: Select a time range, choose its ticket, then save the new worklog.
+        - generic [ref=e21]: Or drag an existing ticket into the calendar
+        - generic [ref=e22]:
+          - generic [ref=e25]:
+            - paragraph [ref=e26]: Research spike
+            - generic [ref=e27]: Fokus · 1 hour
+          - generic [ref=e31]:
+            - paragraph [ref=e32]: Customer follow-up
+            - generic [ref=e33]: Kunden · 1 hour
+          - generic [ref=e37]:
+            - paragraph [ref=e38]: Incident review
+            - generic [ref=e39]: Support · 1 hour
+          - generic [ref=e43]:
+            - paragraph [ref=e44]: Product demo
+            - generic [ref=e45]: Produkt · 1 hour
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - button "Previous period" [ref=e50] [cursor=pointer]: ←
+            - button "Next period" [ref=e51] [cursor=pointer]: →
+            - heading "27. Juli - 2. Aug. 2026" [level=6] [ref=e52]
+            - button "Today" [ref=e53] [cursor=pointer]
+            - group [ref=e54]:
+              - button "Week" [pressed] [ref=e55] [cursor=pointer]
+              - button "Month" [ref=e56] [cursor=pointer]
+            - button "Weekend" [ref=e57] [cursor=pointer]
+            - generic [ref=e58]:
+              - generic [ref=e59]: Hours
+              - generic [ref=e60]:
+                - combobox "Hours" [ref=e61] [cursor=pointer]: 06:00-22:00
+                - textbox: 6-22
+                - group:
+                  - generic: Hours
+            - generic [ref=e62]:
+              - generic [ref=e63]: Grid
+              - generic [ref=e64]:
+                - combobox "Grid" [ref=e65] [cursor=pointer]: 15 min
+                - textbox: "15"
+                - group:
+                  - generic: Grid
+            - generic [ref=e66]:
+              - generic [ref=e67]: Category
+              - generic [ref=e68]:
+                - combobox "Category" [ref=e69] [cursor=pointer]: Alle
+                - textbox: Alle
+                - group:
+                  - generic: Category
+            - generic [ref=e70]:
+              - generic [ref=e71]: Hour height
+              - generic [ref=e72]:
+                - combobox "Hour height" [ref=e73] [cursor=pointer]: Auto · min 52
+                - textbox: comfortable
+                - group:
+                  - generic: Hour height
+          - generic [ref=e75]:
+            - generic [ref=e76]:
+              - generic [ref=e78]: 06:00
+              - generic [ref=e81]: 07:00
+              - generic [ref=e84]: 08:00
+              - generic [ref=e87]: 09:00
+              - generic [ref=e90]: 10:00
+              - generic [ref=e93]: 11:00
+              - generic [ref=e96]: 12:00
+              - generic [ref=e99]: 13:00
+              - generic [ref=e102]: 14:00
+              - generic [ref=e105]: 15:00
+              - generic [ref=e108]: 16:00
+              - generic [ref=e111]: 17:00
+              - generic [ref=e114]: 18:00
+              - generic [ref=e117]: 19:00
+              - generic [ref=e120]: 20:00
+              - generic [ref=e123]: 21:00
+            - generic [ref=e127]:
+              - generic [ref=e128]: Mo 27.
+              - generic [ref=e130]: Di 28.
+              - generic [ref=e132]: Mi 29.
+              - generic [ref=e134]: Do 30.
+              - generic [ref=e136]: Fr 31.
+              - generic [ref=e138]:
+                - button "Montag, 27 Juli 2026, 06:00-06:15"
+                - generic [ref=e139]:
+                  - button "09:00 Weekly planning" [ref=e141] [cursor=pointer]:
+                    - generic [ref=e142]: 09:00
+                    - generic [ref=e143]: Weekly planning
+                  - button "10:45 API implementation" [ref=e147] [cursor=pointer]:
+                    - generic [ref=e148]: 10:45
+                    - generic [ref=e149]: API implementation
+              - generic [ref=e152]:
+                - button "Dienstag, 28 Juli 2026, 06:00-06:15"
+                - generic [ref=e153]:
+                  - button "11:15 Design review" [ref=e155] [cursor=pointer]:
+                    - generic [ref=e156]: 11:15
+                    - generic [ref=e157]: Design review
+                  - button "16:22 Monthly Timesheet Close" [ref=e161] [cursor=pointer]:
+                    - generic [ref=e162]: 16:22
+                    - generic [ref=e163]: Monthly Timesheet Close
+              - generic [ref=e166]:
+                - button "Mittwoch, 29 Juli 2026, 06:00-06:15"
+                - button "13:00 Customer workshop" [ref=e169] [cursor=pointer]:
+                  - generic [ref=e170]: 13:00
+                  - generic [ref=e171]: Customer workshop
+              - generic [ref=e174]:
+                - button "Donnerstag, 30 Juli 2026, 06:00-06:15"
+                - button "08:30 Support rotation" [ref=e177] [cursor=pointer]:
+                  - generic [ref=e178]: 08:30
+                  - generic [ref=e179]: Support rotation
+              - generic [ref=e182]:
+                - button "Freitag, 31 Juli 2026, 06:00-06:15"
+                - button "14:00 Release window" [ref=e185] [cursor=pointer]:
+                  - generic [ref=e186]: 14:00
+                  - generic [ref=e187]: Release window
+        - generic [ref=e190]: Ready

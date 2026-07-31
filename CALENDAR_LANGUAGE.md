@@ -60,6 +60,16 @@ A Time Slot contains `start`, `end`, `minutes`, `index`, `top`, and `height`.
 
 Time Slots can be selected with a pointer or, when `onTimeSlotClick` is present, with package-owned keyboard controls.
 
+## Time Range Selection
+
+A pointer-only Week View gesture that begins in empty day-column space and selects one or more contiguous Time Slots. The ordered `{ start, end, date, timeSlotMinutes }` proposal is emitted through `onTimeRangeSelect`.
+
+Time Range Selection can move upward or downward but remains constrained to its originating day column. A completed range drag suppresses the immediately following Time Slot click.
+
+## Time Range Preview
+
+The ghost shown during Time Range Selection. It uses the same range emitted through `onTimeRangeSelect`, includes a default `HH:mm - HH:mm` label, and is replaceable through the `timeRangePreview` component slot.
+
 ## Keyboard Time Slot Control
 
 A focusable Week View control that selects one Time Slot in a visible day. Arrow keys move between Time Slots and visible days; Enter emits the same selection payload as a pointer click.
@@ -86,7 +96,7 @@ A date-grid view. Month view does not use Time Slots. Month Row Headers are opti
 
 ## Week View
 
-A time-grid view. Week view supports Time Slots, Entry Time Changes, Entry Time Previews, and default Row Headers for hour markers.
+A time-grid view. Week view supports Time Slots, Time Range Selection, Time Range Previews, Entry Time Changes, Entry Time Previews, and default Row Headers for hour markers.
 
 ## External Drag Source
 

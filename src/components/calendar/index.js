@@ -10,6 +10,7 @@ export { CalendarRoot } from "./CalendarRoot";
 export { CalendarRowHeader } from "./CalendarRowHeader";
 export { CalendarTopbar } from "./CalendarTopbar";
 export { CalendarTimeSlotIndicator } from "./CalendarTimeSlotIndicator";
+export { CalendarTimeRangePreview } from "./CalendarTimeRangePreview";
 export { CalendarWeekHeader } from "./CalendarWeekHeader";
 export { useCalendarExternalDragSource } from "./utils/calendarDnd";
 export { WORK_HOUR_PRESETS, WORK_HOUR_PRESET_OPTIONS } from "./utils/dateRange";

@@ -131,11 +131,12 @@ Week View renders five or seven timed day columns and clips entries to the selec
 	entries={entries}
 	timeSlotMinutes={15}
 	onTimeSlotClick={({ start, end }) => openCreateDialog({ start, end })}
+	onTimeRangeSelect={({ start, end }) => openCreateDialog({ start, end })}
 	onEntryTimeChange={({ id, start, end }) => updateEntry(id, { start, end })}
 />
 ```
 
-Chronocal proposes changes through callbacks; it never mutates `entries`.
+Drag from empty Week View space to select a snapped range. Selection remains in its originating day column, works upward or downward, and suppresses the Time Slot click that would otherwise follow a completed drag. Chronocal proposes changes through callbacks; it never mutates `entries`.
 
 ### Week Height
 
@@ -231,6 +232,7 @@ Month predicates receive `{ view, rowIndex, rowStart, rowEnd, dates }`. Week pre
 | --- | --- | --- |
 | `onItemClick(entry)` | Month and week | Activate a normalized entry |
 | `onTimeSlotClick(payload)` | Week | Select a Time Slot |
+| `onTimeRangeSelect(payload)` | Week | Select an empty-grid time range by pointer drag |
 | `onEntryTimeChange(payload)` | Week | Propose a move or resize |
 | `onExternalItemDrop(payload)` | Week | Create from an external source |
 
@@ -239,6 +241,14 @@ Time Slot selection emits:
 ```js
 { start, end, date, view: "week", timeSlotMinutes }
 ```
+
+Time Range Selection emits:
+
+```js
+{ start, end, date, timeSlotMinutes }
+```
+
+`start` and `end` are ordered and snapped to the configured Time Slot Minutes. `date` is the originating day column even if the pointer moves horizontally during selection. A pointer press and release without crossing the drag threshold remains an ordinary Time Slot click.
 
 Move and resize emit:
 
@@ -258,7 +268,7 @@ When `onTimeSlotClick` is present, Week View provides one focusable Time Slot co
 | `ArrowLeft` / `ArrowRight` | Move to the adjacent visible day at the same time |
 | `Enter` | Emit `onTimeSlotClick` |
 
-Navigation clamps at visible day and work-hour boundaries. Pointer and keyboard selection emit the same payload. Time Slot accessibility labels use the configured calendar locale.
+Navigation clamps at visible day and work-hour boundaries. Pointer and keyboard Time Slot selection emit the same payload. Time Range Selection remains pointer-only. Time Slot accessibility labels use the configured calendar locale.
 
 Clickable default `CalendarItem` instances expose `role="button"`, are focusable, and activate with Enter. Custom item slots must preserve or provide equivalent keyboard behavior.
 
@@ -294,7 +304,7 @@ Most applications should use `CalendarRoot` and customize these component slots:
 | Slot | Used in |
 | --- | --- |
 | `cell`, `cellHeader`, `monthWeekdayHeader` | Month |
-| `weekHeader`, `timeSlotIndicator` | Week |
+| `weekHeader`, `timeSlotIndicator`, `timeRangePreview` | Week |
 | `entry`, `item`, `rowHeader` | Both where applicable |
 
 Wrapping a default primitive is safer than rebuilding its behavior:
@@ -310,6 +320,8 @@ function ProjectItem({ item, sx, ...props }) {
 ```
 
 Custom slots should forward `sx`, `children`, `className`, `style`, event handlers, `role`, `tabIndex`, `aria-*`, `data-*`, and unknown props. In particular, preserve `onClick` and `onKeyDown` on custom item roots.
+
+`timeRangePreview` receives `{ start, end, date, timeSlotMinutes, label, layout, view, ownerState }`. Its default `CalendarTimeRangePreview` renders the same dashed primary shadow used for entry move and resize previews with an `HH:mm - HH:mm` label. Replace the slot to customize preview content while leaving snapping and pointer behavior package-owned.
 
 Package-owned month/week structure is styled through `slotProps`. Structural keys include:
 
@@ -383,6 +395,7 @@ import {
 	CalendarRoot,
 	CalendarRowHeader,
 	CalendarTimeSlotIndicator,
+	CalendarTimeRangePreview,
 	CalendarTopbar,
 	CalendarWeekHeader,
 	CALENDAR_VIEWS,

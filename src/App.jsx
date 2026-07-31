@@ -3,6 +3,10 @@ import {
 	Box,
 	Button,
 	Chip,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
 	FormControl,
 	IconButton,
 	InputLabel,
@@ -60,7 +64,14 @@ function TicketCard({ ticket }) {
 				transition: "box-shadow 120ms ease, opacity 120ms ease, border-color 120ms ease",
 			}}
 		>
-			<Stack direction='row' justifyContent='space-between' gap={1} alignItems='flex-start'>
+			<Stack
+				sx={{
+					flexDirection: "row",
+					justifyContent: "space-between",
+					gap: 1,
+					alignItems: "flex-start",
+				}}
+			>
 				<Box sx={{ minWidth: 0 }}>
 					<Typography variant='body2' sx={{ fontWeight: 800, lineHeight: 1.2 }}>
 						{ticket.title}
@@ -102,9 +113,27 @@ function TicketRail() {
 					Ticket rail
 				</Typography>
 				<Typography variant='body2' color='text.secondary'>
-					Drag a ticket into Week View. Month View keeps the same shared worklogs.
+					Create worklogs in Week View. Month View keeps the same shared data.
 				</Typography>
 			</Box>
+			<Box
+				sx={{
+					p: 1.25,
+					border: "1px dashed #a34c35",
+					borderRadius: 2,
+					bgcolor: "#fff8ed",
+				}}
+			>
+				<Typography variant='caption' sx={{ display: "block", color: "#a34c35", fontWeight: 900 }}>
+					Drag empty calendar space
+				</Typography>
+				<Typography variant='caption' color='text.secondary' sx={{ display: "block", mt: 0.25 }}>
+					Select a time range, choose its ticket, then save the new worklog.
+				</Typography>
+			</Box>
+			<Typography variant='caption' sx={{ color: "#765f3d", fontWeight: 800 }}>
+				Or drag an existing ticket into the calendar
+			</Typography>
 			<Box
 				sx={{
 					display: "flex",
@@ -120,6 +149,89 @@ function TicketRail() {
 				))}
 			</Box>
 		</Box>
+	);
+}
+
+function CreateWorklogDialog({ draft, tickets, onCancel, onChangeTicket, onCreate }) {
+	const durationMinutes = draft?.end.diff(draft.start, "minute") ?? 0;
+	const durationLabel =
+		durationMinutes >= 60 && durationMinutes % 60 === 0
+			? `${durationMinutes / 60} ${durationMinutes === 60 ? "hour" : "hours"}`
+			: `${durationMinutes} minutes`;
+
+	return (
+		<Dialog
+			open={Boolean(draft)}
+			onClose={onCancel}
+			fullWidth
+			maxWidth='xs'
+			slotProps={{ paper: { sx: { borderRadius: 3, bgcolor: "#fffdf8" } } }}
+		>
+			<DialogTitle sx={{ pb: 1, fontWeight: 900 }}>Create worklog</DialogTitle>
+			<Box component='form' onSubmit={onCreate}>
+				<DialogContent sx={{ pt: "8px !important" }}>
+					<Stack sx={{ gap: 2 }}>
+						<Box
+							sx={{
+								p: 1.5,
+								border: "1px solid #e4dac9",
+								borderRadius: 2,
+								bgcolor: "#f8f1e5",
+							}}
+						>
+							<Typography variant='overline' sx={{ color: "#765f3d", fontWeight: 900 }}>
+								Selected range
+							</Typography>
+							<Stack
+								sx={{
+									flexDirection: "row",
+									justifyContent: "space-between",
+									alignItems: "center",
+									gap: 2,
+								}}
+							>
+								<Box>
+									<Typography sx={{ fontWeight: 900, textTransform: "capitalize" }}>
+										{draft?.start.format("dddd, D MMMM")}
+									</Typography>
+									<Typography variant='body2' color='text.secondary'>
+										{draft?.start.format("HH:mm")} - {draft?.end.format("HH:mm")}
+									</Typography>
+								</Box>
+								<Chip
+									size='small'
+									label={durationLabel}
+									sx={{ fontWeight: 800, bgcolor: "#e9f2e9" }}
+								/>
+							</Stack>
+						</Box>
+						<FormControl fullWidth>
+							<InputLabel id='worklog-ticket-label'>Ticket</InputLabel>
+							<Select
+								labelId='worklog-ticket-label'
+								label='Ticket'
+								value={draft?.ticketId ?? ""}
+								onChange={(event) => onChangeTicket(event.target.value)}
+							>
+								{tickets.map((ticket) => (
+									<MenuItem key={ticket.id} value={ticket.id}>
+										{ticket.title} · {ticket.category}
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+					</Stack>
+				</DialogContent>
+				<DialogActions sx={{ px: 3, pb: 2.5 }}>
+					<Button onClick={onCancel} color='inherit'>
+						Cancel
+					</Button>
+					<Button type='submit' variant='contained' disabled={!draft?.ticketId}>
+						Create worklog
+					</Button>
+				</DialogActions>
+			</Box>
+		</Dialog>
 	);
 }
 
@@ -250,6 +362,7 @@ function CalendarWorkspace() {
 	const [filter, setFilter] = useState(categoryFilters[0]);
 	const [sizeMode, setSizeMode] = useState("comfortable");
 	const [lastAction, setLastAction] = useState("Ready");
+	const [worklogDraft, setWorklogDraft] = useState(null);
 	const visibleEntries =
 		filter === categoryFilters[0]
 			? store.entries
@@ -282,6 +395,14 @@ function CalendarWorkspace() {
 						weekLayout={hourHeightModes[sizeMode].value}
 						entries={visibleEntries}
 						onTimeSlotClick={({ start }) => setLastAction(`Selected ${start.format("ddd HH:mm")}`)}
+						onTimeRangeSelect={({ start, end }) => {
+							setWorklogDraft({
+								start,
+								end,
+								ticketId: store.backlogTickets[0]?.id ?? "",
+							});
+							setLastAction(`Selected ${start.format("ddd HH:mm")} - ${end.format("HH:mm")}`);
+						}}
 						onItemClick={(entry) => setLastAction(`Opened ${entry.title}`)}
 						onExternalItemDrop={({ source: ticket, start, end }) => {
 							store.addWorklog({ ticketId: ticket.id, start, end });
@@ -301,6 +422,30 @@ function CalendarWorkspace() {
 							onSizeModeChange={setSizeMode}
 						/>
 					</CalendarRoot>
+					<CreateWorklogDialog
+						draft={worklogDraft}
+						tickets={store.backlogTickets}
+						onCancel={() => setWorklogDraft(null)}
+						onChangeTicket={(ticketId) =>
+							setWorklogDraft((current) => (current ? { ...current, ticketId } : current))
+						}
+						onCreate={(event) => {
+							event.preventDefault();
+							if (!worklogDraft) {
+								return;
+							}
+
+							const ticket = store.backlogTickets.find(
+								(candidate) => candidate.id === worklogDraft.ticketId,
+							);
+							store.addWorklog(worklogDraft);
+							setFilter(categoryFilters[0]);
+							setLastAction(
+								`Created ${ticket?.title ?? "worklog"} · ${worklogDraft.start.format("ddd HH:mm")}`,
+							);
+							setWorklogDraft(null);
+						}}
+					/>
 				</CalendarLocalizationProvider>
 				<Chip
 					size='small'
@@ -379,7 +524,13 @@ function DemoApp() {
 							bgcolor: "background.paper",
 						}}
 					>
-						<Stack direction={{ xs: "column", md: "row" }} justifyContent='space-between' gap={0.5}>
+						<Stack
+							sx={{
+								flexDirection: { xs: "column", md: "row" },
+								justifyContent: "space-between",
+								gap: 0.5,
+							}}
+						>
 							<Typography variant='subtitle1' sx={{ fontWeight: 900 }}>
 								Shared ticket and worklog workspace
 							</Typography>

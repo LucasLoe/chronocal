@@ -7,6 +7,9 @@ import {
 	createWeekEntryTimeChange,
 	createWeekEntryTimeInteraction,
 	createWeekEntryTimePreview,
+	createWeekTimeRangeInteraction,
+	createWeekTimeRangePreview,
+	createWeekTimeRangeSelection,
 	createWeekTimeSlotClickPayload,
 	createWeekTimeSlotFromPointerEvent,
 	isSameHoveredWeekTimeSlot,
@@ -21,7 +24,7 @@ import {
 } from "./weekGeometry";
 
 const EXTERNAL_DROP_DURATION_MINUTES = 60;
-const ENTRY_TIME_DRAG_THRESHOLD_PX = 2;
+const POINTER_DRAG_THRESHOLD_PX = 2;
 const INTERACTION_CLICK_SUPPRESSION_MS = 200;
 
 function isSameEntryTimePreview(left, right) {
@@ -36,8 +39,16 @@ function isSameEntryTimePreview(left, right) {
 
 function hasMovedPastThreshold(interaction, point) {
 	return (
-		Math.abs(point.clientX - interaction.pointerStartX) > ENTRY_TIME_DRAG_THRESHOLD_PX ||
-		Math.abs(point.clientY - interaction.pointerStartY) > ENTRY_TIME_DRAG_THRESHOLD_PX
+		Math.abs(point.clientX - interaction.pointerStartX) > POINTER_DRAG_THRESHOLD_PX ||
+		Math.abs(point.clientY - interaction.pointerStartY) > POINTER_DRAG_THRESHOLD_PX
+	);
+}
+
+function isSameTimeRangePreview(left, right) {
+	return (
+		left?.dateKey === right?.dateKey &&
+		left?.start?.isSame(right?.start) &&
+		left?.end?.isSame(right?.end)
 	);
 }
 
@@ -47,6 +58,7 @@ export function useWeekDndInteractions({
 	locale,
 	onEntryTimeChange,
 	onExternalItemDrop,
+	onTimeRangeSelect,
 	onTimeSlotClick,
 	timeSlotMinutes,
 	view,
@@ -55,18 +67,23 @@ export function useWeekDndInteractions({
 }) {
 	const activeEntryTimeInteractionRef = useRef(null);
 	const activeEntryTimePreviewRef = useRef(null);
+	const activeTimeRangeInteractionRef = useRef(null);
+	const activeTimeRangePreviewRef = useRef(null);
 	const suppressNextItemClickRef = useRef(false);
 	const suppressTimeSlotClickUntilRef = useRef(0);
 	const removeActivePointerListenersRef = useRef(null);
 	const [hoveredTimeSlot, setHoveredTimeSlot] = useState(null);
 	const [activeEntryTimeId, setActiveEntryTimeId] = useState(null);
 	const [activeEntryTimePreview, setActiveEntryTimePreview] = useState(null);
+	const [activeTimeRangePreview, setActiveTimeRangePreview] = useState(null);
 
 	useEffect(
 		() => () => {
 			removeActivePointerListenersRef.current?.();
 			activeEntryTimeInteractionRef.current = null;
 			activeEntryTimePreviewRef.current = null;
+			activeTimeRangeInteractionRef.current = null;
+			activeTimeRangePreviewRef.current = null;
 		},
 		[],
 	);
@@ -155,11 +172,45 @@ export function useWeekDndInteractions({
 		setActiveEntryTimeId(null);
 		setActiveEntryTimePreview(null);
 	};
+	const updateTimeRangePreview = (interaction, point) => {
+		const timeSlot = getTimeSlotFromPoint(interaction.date, point);
+		if (!timeSlot) {
+			return null;
+		}
+
+		const selection = createWeekTimeRangeSelection({ interaction, timeSlot });
+		const preview = createWeekTimeRangePreview({
+			selection,
+			locale,
+			workHours,
+			hourHeight,
+		});
+		const currentPreview = activeTimeRangePreviewRef.current;
+
+		if (isSameTimeRangePreview(currentPreview, preview)) {
+			return currentPreview;
+		}
+
+		activeTimeRangePreviewRef.current = preview;
+		setActiveTimeRangePreview(preview);
+		return preview;
+	};
+	const clearTimeRangeInteraction = () => {
+		activeTimeRangeInteractionRef.current = null;
+		activeTimeRangePreviewRef.current = null;
+		setActiveTimeRangePreview(null);
+	};
 	const suppressImmediateTimeSlotClick = () => {
 		suppressTimeSlotClickUntilRef.current = Date.now() + INTERACTION_CLICK_SUPPRESSION_MS;
 	};
 	const startEntryTimeInteraction = ({ action, date, disabled, entry }) => (event) => {
-		if (disabled || !onEntryTimeChange || event.button !== 0) {
+		if (
+			disabled ||
+			!onEntryTimeChange ||
+			event.button !== 0 ||
+			activeEntryTimeInteractionRef.current ||
+			activeTimeRangeInteractionRef.current
+		) {
 			return;
 		}
 		event.preventDefault();
@@ -178,6 +229,7 @@ export function useWeekDndInteractions({
 			pointerY: getWeekBodyPointerYFromPoint({ point: startPoint, gridElement }),
 			pointerStartX: event.clientX,
 			pointerStartY: event.clientY,
+			pointerId: event.pointerId,
 			timeSlotMinutes,
 		});
 		activeEntryTimeInteractionRef.current = interaction;
@@ -188,7 +240,7 @@ export function useWeekDndInteractions({
 
 		const handlePointerMove = (moveEvent) => {
 			const currentInteraction = activeEntryTimeInteractionRef.current;
-			if (!currentInteraction) {
+			if (!currentInteraction || moveEvent.pointerId !== currentInteraction.pointerId) {
 				return;
 			}
 
@@ -202,18 +254,16 @@ export function useWeekDndInteractions({
 			updateEntryTimePreview(currentInteraction, point);
 		};
 		const handlePointerUp = (upEvent) => {
-			removePointerListeners();
-
 			const currentInteraction = activeEntryTimeInteractionRef.current;
-			const currentPreview = activeEntryTimePreviewRef.current;
-			clearEntryTimeInteraction();
-
-			if (!currentInteraction || !currentInteraction.hasMoved) {
+			if (!currentInteraction || upEvent.pointerId !== currentInteraction.pointerId) {
 				return;
 			}
+			removePointerListeners();
 
-			const point = { clientX: upEvent.clientX, clientY: upEvent.clientY };
-			const preview = currentPreview || updateEntryTimePreview(currentInteraction, point);
+			const preview = currentInteraction.hasMoved
+				? updateEntryTimePreview(currentInteraction, upEvent)
+				: null;
+			clearEntryTimeInteraction();
 			if (!preview) {
 				return;
 			}
@@ -228,7 +278,11 @@ export function useWeekDndInteractions({
 				action: preview.action,
 			});
 		};
-		const handlePointerCancel = () => {
+		const handlePointerCancel = (cancelEvent) => {
+			const currentInteraction = activeEntryTimeInteractionRef.current;
+			if (!currentInteraction || cancelEvent.pointerId !== currentInteraction.pointerId) {
+				return;
+			}
 			removePointerListeners();
 			clearEntryTimeInteraction();
 		};
@@ -246,9 +300,94 @@ export function useWeekDndInteractions({
 		document.addEventListener("pointerup", handlePointerUp);
 		document.addEventListener("pointercancel", handlePointerCancel);
 	};
+	const startTimeRangeInteraction = (date) => (event) => {
+		if (
+			!onTimeRangeSelect ||
+			event.button !== 0 ||
+			activeEntryTimeInteractionRef.current ||
+			activeTimeRangeInteractionRef.current ||
+			event.target.closest?.("[data-calendar-week-entry]")
+		) {
+			return;
+		}
+
+		const timeSlot = getTimeSlotFromEvent(date, event);
+		const interaction = createWeekTimeRangeInteraction({
+			date,
+			timeSlot,
+			pointerStartX: event.clientX,
+			pointerStartY: event.clientY,
+			pointerId: event.pointerId,
+		});
+		activeTimeRangeInteractionRef.current = interaction;
+		activeTimeRangePreviewRef.current = null;
+		setActiveTimeRangePreview(null);
+		removeActivePointerListenersRef.current?.();
+
+		const handlePointerMove = (moveEvent) => {
+			const currentInteraction = activeTimeRangeInteractionRef.current;
+			if (!currentInteraction || moveEvent.pointerId !== currentInteraction.pointerId) {
+				return;
+			}
+
+			const point = { clientX: moveEvent.clientX, clientY: moveEvent.clientY };
+			if (!hasMovedPastThreshold(currentInteraction, point)) {
+				return;
+			}
+
+			moveEvent.preventDefault();
+			currentInteraction.hasMoved = true;
+			setHoveredTimeSlot(null);
+			updateTimeRangePreview(currentInteraction, point);
+		};
+		const handlePointerUp = (upEvent) => {
+			const currentInteraction = activeTimeRangeInteractionRef.current;
+			if (!currentInteraction || upEvent.pointerId !== currentInteraction.pointerId) {
+				return;
+			}
+			removePointerListeners();
+
+			const preview = currentInteraction.hasMoved
+				? updateTimeRangePreview(currentInteraction, upEvent)
+				: null;
+			clearTimeRangeInteraction();
+			if (!preview) {
+				return;
+			}
+
+			suppressImmediateTimeSlotClick();
+			onTimeRangeSelect({
+				start: preview.start,
+				end: preview.end,
+				date: preview.date,
+				timeSlotMinutes: preview.timeSlotMinutes,
+			});
+		};
+		const handlePointerCancel = (cancelEvent) => {
+			const currentInteraction = activeTimeRangeInteractionRef.current;
+			if (!currentInteraction || cancelEvent.pointerId !== currentInteraction.pointerId) {
+				return;
+			}
+			removePointerListeners();
+			clearTimeRangeInteraction();
+		};
+		const removePointerListeners = () => {
+			document.removeEventListener("pointermove", handlePointerMove);
+			document.removeEventListener("pointerup", handlePointerUp);
+			document.removeEventListener("pointercancel", handlePointerCancel);
+			if (removeActivePointerListenersRef.current === removePointerListeners) {
+				removeActivePointerListenersRef.current = null;
+			}
+		};
+
+		removeActivePointerListenersRef.current = removePointerListeners;
+		document.addEventListener("pointermove", handlePointerMove);
+		document.addEventListener("pointerup", handlePointerUp);
+		document.addEventListener("pointercancel", handlePointerCancel);
+	};
 
 	const handleWeekColumnPointerMove = (date) => (event) => {
-		if (activeEntryTimeInteractionRef.current) {
+		if (activeEntryTimeInteractionRef.current || activeTimeRangeInteractionRef.current) {
 			return;
 		}
 
@@ -329,6 +468,7 @@ export function useWeekDndInteractions({
 	return {
 		activeEntryTimeId,
 		activeEntryTimePreview,
+		activeTimeRangePreview,
 		getWeekEntryTimePointerProps: (options) => ({
 			onPointerDown: startEntryTimeInteraction(options),
 		}),
@@ -337,6 +477,7 @@ export function useWeekDndInteractions({
 		handleWeekColumnDrop,
 		handleWeekColumnPointerLeave,
 		handleWeekColumnPointerMove,
+		handleWeekColumnPointerDown: startTimeRangeInteraction,
 		handleWeekItemClick,
 		handleWeekItemPointerEnter,
 		hoveredTimeSlot,

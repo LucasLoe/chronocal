@@ -64,7 +64,11 @@ const CalendarWeekColumn = styled(Box, {
 	overridesResolver: (props, styles) => styles.column,
 })(({ theme, ownerState }) => ({
 	position: "relative",
-	cursor: ownerState.onTimeSlotClick ? "pointer" : "default",
+	cursor: ownerState.onTimeRangeSelect
+		? "crosshair"
+		: ownerState.onTimeSlotClick
+			? "pointer"
+			: "default",
 	height: getWeekColumnHeight(ownerState.workHours, ownerState.hourHeight),
 	borderRight: "1px solid",
 	borderBottom: "1px solid",
@@ -115,6 +119,32 @@ const CalendarWeekEntryTimePreviewLabel = styled(Box, {
 	backgroundColor: theme.palette.primary.main,
 	boxShadow: theme.shadows[2],
 	whiteSpace: "nowrap",
+}));
+
+const CalendarWeekTimeRangePreview = styled(Box, {
+	name: "CALENDAR_CalendarWeekView",
+	slot: "TimeRangePreview",
+	overridesResolver: (props, styles) => styles.timeRangePreview,
+})(({ theme, ownerState }) => ({
+	position: "absolute",
+	top: ownerState.layout.top,
+	left: 2,
+	right: 2,
+	height: ownerState.layout.height,
+	zIndex: 4,
+	pointerEvents: "none",
+	border: "2px dashed",
+	borderColor: theme.palette.primary.main,
+	borderRadius: theme.shape.borderRadius * 0.5,
+	backgroundColor: theme.palette.primary.main,
+	boxSizing: "border-box",
+	"&::before": {
+		content: '""',
+		position: "absolute",
+		inset: 0,
+		backgroundColor: theme.palette.background.paper,
+		opacity: 0.82,
+	},
 }));
 
 const CalendarWeekTimeSlotLayer = styled(Box, {
@@ -286,15 +316,17 @@ function WeekdayColumn({
 	normalizedEntries,
 	onEntryTimeChange,
 	onItemClick,
+	onTimeRangeSelect,
 	onTimeSlotClick,
 	slotProps,
 	slots,
 	view,
 	weekViewOwnerState,
 	weekInteractions: {
-		activeEntryTimeId, activeEntryTimePreview, getWeekEntryTimePointerProps,
+		activeEntryTimeId, activeEntryTimePreview, activeTimeRangePreview,
+		getWeekEntryTimePointerProps,
 		handleWeekColumnClick, handleWeekColumnDragOver, handleWeekColumnDrop,
-		handleWeekColumnPointerLeave, handleWeekColumnPointerMove,
+		handleWeekColumnPointerDown, handleWeekColumnPointerLeave, handleWeekColumnPointerMove,
 		handleWeekItemClick, handleWeekItemPointerEnter, hoveredTimeSlot,
 	},
 	workHours,
@@ -302,6 +334,7 @@ function WeekdayColumn({
 	const Entry = slots.entry;
 	const Item = slots.item;
 	const TimeSlotIndicator = slots.timeSlotIndicator;
+	const TimeRangePreview = slots.timeRangePreview;
 	const { sx: weekEntrySx, ...weekEntrySlotRest } = slotProps.entry || {};
 	const { onClick: itemSlotOnClick, ...itemSlotRest } = slotProps.item || {};
 	const { sx: timeSlotIndicatorSx, ...timeSlotIndicatorSlotRest } =
@@ -311,6 +344,7 @@ function WeekdayColumn({
 		onClick: weekColumnOnClick,
 		onDragOver: weekColumnOnDragOver,
 		onDrop: weekColumnOnDrop,
+		onPointerDown: weekColumnOnPointerDown,
 		onPointerLeave: weekColumnOnPointerLeave,
 		onPointerMove: weekColumnOnPointerMove,
 		...weekColumnSlotRest
@@ -348,6 +382,8 @@ function WeekdayColumn({
 				: null;
 	const columnEntryTimePreview =
 		activeEntryTimePreview?.dateKey === dateKey ? activeEntryTimePreview : null;
+	const columnTimeRangePreview =
+		activeTimeRangePreview?.dateKey === dateKey ? activeTimeRangePreview : null;
 	const positionedEntries = getWeekEntryLayouts({
 		entries: normalizedEntries,
 		date,
@@ -365,6 +401,7 @@ function WeekdayColumn({
 		date,
 		isToday: isSameDay(date, dayjs()),
 		onTimeSlotClick,
+		onTimeRangeSelect,
 	};
 
 	return (
@@ -375,6 +412,10 @@ function WeekdayColumn({
 				weekColumnOnDragOver,
 			)}
 			onDrop={composeCalendarEventHandlers(handleWeekColumnDrop(date), weekColumnOnDrop)}
+			onPointerDown={composeCalendarEventHandlers(
+				handleWeekColumnPointerDown(date),
+				weekColumnOnPointerDown,
+			)}
 			onPointerMove={composeCalendarEventHandlers(
 				handleWeekColumnPointerMove(date),
 				weekColumnOnPointerMove,
@@ -428,6 +469,28 @@ function WeekdayColumn({
 						{columnEntryTimePreview.label}
 					</CalendarWeekEntryTimePreviewLabel>
 				</CalendarWeekEntryTimePreview>
+			)}
+			{columnTimeRangePreview && (
+				<CalendarWeekTimeRangePreview
+					data-calendar-week-time-range-preview={dateKey}
+					ownerState={columnTimeRangePreview}
+				>
+					<TimeRangePreview
+						date={date}
+						start={columnTimeRangePreview.start}
+						end={columnTimeRangePreview.end}
+						label={columnTimeRangePreview.label}
+						layout={columnTimeRangePreview.layout}
+						timeSlotMinutes={columnTimeRangePreview.timeSlotMinutes}
+						view={view}
+						ownerState={{
+							...columnTimeRangePreview,
+							hourHeight,
+							view,
+						}}
+						{...(slotProps.timeRangePreview || {})}
+					/>
+				</CalendarWeekTimeRangePreview>
 			)}
 			{visibleTimeSlot && (
 				<CalendarWeekTimeSlotLayer
@@ -583,6 +646,7 @@ export function CalendarWeekView(inProps) {
 		onEntryTimeChange,
 		onExternalItemDrop,
 		onItemClick,
+		onTimeRangeSelect,
 		onTimeSlotClick,
 		showRowHeaders,
 		showWeekend,
@@ -649,6 +713,7 @@ export function CalendarWeekView(inProps) {
 		locale,
 		onEntryTimeChange,
 		onExternalItemDrop,
+		onTimeRangeSelect,
 		onTimeSlotClick,
 		timeSlotMinutes,
 		view,
@@ -750,6 +815,7 @@ export function CalendarWeekView(inProps) {
 							normalizedEntries={normalizedEntries}
 							onEntryTimeChange={onEntryTimeChange}
 							onItemClick={onItemClick}
+							onTimeRangeSelect={onTimeRangeSelect}
 							onTimeSlotClick={onTimeSlotClick}
 							slotProps={slotProps}
 							slots={slots}

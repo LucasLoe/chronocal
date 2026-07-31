@@ -34,6 +34,7 @@ const requiredRuntimeDeclarations = [
 	"CalendarRoot",
 	"CalendarRowHeader",
 	"CalendarTimeSlotIndicator",
+	"CalendarTimeRangePreview",
 	"CalendarTopbar",
 	"CalendarWeekHeader",
 	"CALENDAR_VIEWS",

@@ -33,10 +33,11 @@ CalendarRoot
    │     ├─ CalendarCellHeader
    │     └─ CalendarEntry → CalendarItem
    └─ CalendarWeekView
-      ├─ optional Row Header Gutter
-      ├─ CalendarWeekHeader
-      ├─ package-owned keyboard Time Slot controls
-      └─ day columns → positioned CalendarEntry items
+       ├─ optional Row Header Gutter
+       ├─ CalendarWeekHeader
+       ├─ package-owned keyboard Time Slot controls
+       ├─ optional CalendarTimeRangePreview
+       └─ day columns → positioned CalendarEntry items
 ```
 
 `CalendarGrid` is only the active-view switch and scroll container. View rendering stays in explicit Month and Week components so inactive view work is not constructed.
@@ -78,8 +79,8 @@ Use `src/lib/dayjs.js` for package date work. It registers `localizedFormat`, `i
 | `utils/weekGeometry.js` | Minute/pixel conversion and visible geometry |
 | `utils/timeSlots.js` | Time Slot normalization and index/pointer mapping |
 | `utils/weekLayout.js` | Filtering, clipping, overlap lanes, and positioning |
-| `utils/weekInteractions.js` | Time Slot and entry-range payload construction |
-| `utils/weekDndInteractions.js` | Pointer lifecycle, previews, drops, and click suppression |
+| `utils/weekInteractions.js` | Time Slot, Time Range, and entry-range payload construction |
+| `utils/weekDndInteractions.js` | Pointer lifecycle, Time Range Selection, previews, drops, and click suppression |
 | `utils/calendarDnd.js` | Native external drag source registry and hook |
 | `utils/itemEvents.js` | Item click composition and propagation |
 
@@ -122,6 +123,8 @@ An omitted or `undefined` `end` is valid. `getCalendarEntryEnd()` supplies an ef
 - Missing ends use a one-hour effective duration.
 - Move and resize emit proposals; they never mutate entries.
 - External drops propose a one-hour range.
+- Empty-column pointer drags propose a snapped Time Range constrained to their originating day.
+- Completed Time Range Selection suppresses the immediately following Time Slot click.
 - Without an explicit override, Hour Height expands to fill the bounded grid viewport and never falls below its configured minimum.
 
 Week geometry defaults:
@@ -171,6 +174,7 @@ Keyboard Time Slot controls exist only when `onTimeSlotClick` is provided.
 - Navigation clamps at work-hour and visible-day boundaries.
 - The existing Time Slot indicator displays keyboard focus.
 - Accessibility labels contain the localized full date and time range.
+- Time Range Selection remains pointer-only; keyboard controls continue to select one Time Slot.
 
 The keyboard control is package-owned because it depends on Week View geometry and selection state. It is themeable through `CALENDAR_CalendarWeekView.styleOverrides.keyboardTimeSlot`, but is not a component slot or native `slotProps` key.
 
@@ -191,13 +195,14 @@ Replaceable component slots:
 	monthWeekdayHeader,
 	rowHeader,
 	timeSlotIndicator,
+	timeRangePreview,
 	weekHeader,
 }
 ```
 
 Prefer wrapping public default components. Custom roots must forward package props, especially `sx`, positioning styles, children, class names, event handlers, `role`, `tabIndex`, and accessibility/data attributes.
 
-The Week View column, keyboard Time Slot control, draggable wrapper, resize handles, and preview remain package-owned. Their geometry and event behavior must not move into replaceable components.
+The Week View column, keyboard Time Slot control, draggable wrapper, resize handles, and Entry Time Preview remain package-owned. Time Range Preview content is replaceable, but its geometry and event behavior remain package-owned.
 
 ### Native Structural Keys
 
@@ -246,14 +251,16 @@ Theme component names:
 - `CALENDAR_CalendarItem`
 - `CALENDAR_CalendarRowHeader`
 - `CALENDAR_CalendarTimeSlotIndicator`
+- `CALENDAR_CalendarTimeRangePreview`
 
 Style override slots:
 
 | Component | Slots |
 | --- | --- |
 | Root, Grid, Topbar, Entry, TimeSlotIndicator | `root` |
+| TimeRangePreview | `root`, `label` |
 | MonthView | `root`, `corner`, `rowHeaderGutter` |
-| WeekView | `root`, `content`, `grid`, `column`, `entryTimePreview`, `entryTimePreviewLabel`, `timeSlotLayer`, `keyboardTimeSlot`, `draggableEntry`, `resizeHandle`, `rowHeaderGutter`, `rowHeaderCorner`, `rowHeaderCell` |
+| WeekView | `root`, `content`, `grid`, `column`, `entryTimePreview`, `entryTimePreviewLabel`, `timeRangePreview`, `timeSlotLayer`, `keyboardTimeSlot`, `draggableEntry`, `resizeHandle`, `rowHeaderGutter`, `rowHeaderCorner`, `rowHeaderCell` |
 | Cell | `root`, `itemWrapper` |
 | CellHeader | `root`, `weekday`, `day` |
 | MonthWeekdayHeader, WeekHeader, RowHeader | `root`, `label` |

@@ -5,6 +5,9 @@ import {
 	createWeekEntryTimeInteraction,
 	createWeekEntryTimePreview,
 	createHoveredWeekTimeSlot,
+	createWeekTimeRangeInteraction,
+	createWeekTimeRangePreview,
+	createWeekTimeRangeSelection,
 	createWeekTimeSlotClickPayload,
 	isSameHoveredWeekTimeSlot,
 	WEEK_ENTRY_TIME_ACTIONS,
@@ -29,6 +32,17 @@ function createInteraction(action) {
 		pointerStartY: 260,
 		timeSlotMinutes: 30,
 	});
+}
+
+function createTimeSlot(index) {
+	const start = date.startOf("day").hour(6).add(index * 30, "minute");
+
+	return {
+		start,
+		end: start.add(30, "minute"),
+		index,
+		minutes: 30,
+	};
 }
 
 describe("week interactions", () => {
@@ -62,6 +76,51 @@ describe("week interactions", () => {
 				createHoveredWeekTimeSlot({ date: dayjs("2026-05-19"), timeSlot: { index: 3 } }),
 			),
 		).toBe(false);
+	});
+
+	it("creates ordered downward and upward time range selections", () => {
+		const downwardInteraction = createWeekTimeRangeInteraction({
+			date,
+			timeSlot: createTimeSlot(8),
+			pointerStartX: 10,
+			pointerStartY: 20,
+		});
+		const upwardInteraction = createWeekTimeRangeInteraction({
+			date,
+			timeSlot: createTimeSlot(10),
+			pointerStartX: 10,
+			pointerStartY: 20,
+		});
+		const downward = createWeekTimeRangeSelection({
+			interaction: downwardInteraction,
+			timeSlot: createTimeSlot(11),
+		});
+		const upward = createWeekTimeRangeSelection({
+			interaction: upwardInteraction,
+			timeSlot: createTimeSlot(7),
+		});
+
+		expect(downward.start.format("HH:mm")).toBe("10:00");
+		expect(downward.end.format("HH:mm")).toBe("12:00");
+		expect(upward.start.format("HH:mm")).toBe("09:30");
+		expect(upward.end.format("HH:mm")).toBe("11:30");
+		expect(upward).toEqual(
+			expect.objectContaining({ date, timeSlotMinutes: 30 }),
+		);
+	});
+
+	it("creates a time range preview from the selected range", () => {
+		const selection = {
+			start: dayjs("2026-05-18T10:00:00"),
+			end: dayjs("2026-05-18T12:00:00"),
+			date,
+			timeSlotMinutes: 30,
+		};
+		const preview = createWeekTimeRangePreview({ selection, workHours });
+
+		expect(preview.dateKey).toBe("2026-05-18");
+		expect(preview.label).toBe("10:00 - 12:00");
+		expect(preview.layout).toEqual({ top: 208, height: 104 });
 	});
 
 	it("creates move entry time changes while preserving duration", () => {

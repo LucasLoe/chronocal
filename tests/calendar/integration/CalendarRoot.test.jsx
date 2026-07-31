@@ -74,6 +74,14 @@ function TestTimeSlotIndicator({ timeSlot }) {
 	);
 }
 
+function TestTimeRangePreview({ date, end, label, start }) {
+	return (
+		<div data-testid='time-range-preview' data-date={date.format("YYYY-MM-DD")}>
+			{label} ({start.format("HH:mm")}-{end.format("HH:mm")})
+		</div>
+	);
+}
+
 function TestRowHeader({ ownerState }) {
 	return (
 		<div data-testid={`row-header-${ownerState.view}-${ownerState.rowIndex}`}>
@@ -685,6 +693,170 @@ describe("CalendarRoot", () => {
 		);
 		expect(handleTimeSlotClick.mock.calls[0][0].start.format("HH:mm")).toBe("07:30");
 		expect(handleTimeSlotClick.mock.calls[0][0].end.format("HH:mm")).toBe("08:00");
+	});
+
+	it("selects a downward time range within its originating week column", async () => {
+		const handleTimeRangeSelect = vi.fn();
+		const handleTimeSlotClick = vi.fn();
+		const { container } = render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.WEEK}
+				date='2026-05-18'
+				entries={[]}
+				timeSlotMinutes={30}
+				onTimeRangeSelect={handleTimeRangeSelect}
+				onTimeSlotClick={handleTimeSlotClick}
+			/>,
+		);
+		setupWeekDragGeometry(container);
+		const monday = container.querySelector('[data-calendar-week-column="2026-05-18"]');
+
+		dragPointer(monday, {
+			from: { x: 50, y: 250 },
+			to: { x: 150, y: 328 },
+		});
+		fireEvent.click(monday, { clientX: 50, clientY: 328 });
+
+		await waitFor(() => expect(handleTimeRangeSelect).toHaveBeenCalledTimes(1));
+		expect(handleTimeSlotClick).not.toHaveBeenCalled();
+		const payload = handleTimeRangeSelect.mock.calls[0][0];
+		expect(payload.start.format("YYYY-MM-DDTHH:mm")).toBe("2026-05-18T10:00");
+		expect(payload.end.format("YYYY-MM-DDTHH:mm")).toBe("2026-05-18T12:00");
+		expect(payload.date.format("YYYY-MM-DD")).toBe("2026-05-18");
+		expect(payload.timeSlotMinutes).toBe(30);
+		expect(payload).not.toHaveProperty("view");
+	});
+
+	it("selects upward ranges and commits the final pointer-up slot", async () => {
+		const handleTimeRangeSelect = vi.fn();
+		const { container } = render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.WEEK}
+				date='2026-05-18'
+				entries={[]}
+				timeSlotMinutes={30}
+				onTimeRangeSelect={handleTimeRangeSelect}
+				slots={{ timeRangePreview: TestTimeRangePreview }}
+			/>,
+		);
+		setupWeekDragGeometry(container);
+		const monday = container.querySelector('[data-calendar-week-column="2026-05-18"]');
+
+		startDragPointer(monday, {
+			from: { x: 50, y: 302 },
+			to: { x: 50, y: 224 },
+		});
+
+		expect(screen.getByTestId("time-range-preview")).toHaveAttribute(
+			"data-date",
+			"2026-05-18",
+		);
+		expect(screen.getByTestId("time-range-preview")).toHaveTextContent(
+			"09:30 - 11:30 (09:30-11:30)",
+		);
+		expect(
+			container.querySelector('[data-calendar-week-time-range-preview="2026-05-18"]'),
+		).toHaveStyle({ top: "182px", height: "104px" });
+
+		fireEvent.pointerUp(document, {
+			button: 0,
+			clientX: 50,
+			clientY: 198,
+			isPrimary: true,
+			pointerId: 1,
+		});
+
+		await waitFor(() => expect(handleTimeRangeSelect).toHaveBeenCalledTimes(1));
+		expect(handleTimeRangeSelect.mock.calls[0][0].start.format("HH:mm")).toBe("09:00");
+		expect(handleTimeRangeSelect.mock.calls[0][0].end.format("HH:mm")).toBe("11:30");
+	});
+
+	it("keeps ordinary slot clicks and entry interactions separate from range selection", () => {
+		const handleEntryTimeChange = vi.fn();
+		const handleItemClick = vi.fn();
+		const handleTimeRangeSelect = vi.fn();
+		const handleTimeSlotClick = vi.fn();
+		const { container } = render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.WEEK}
+				date='2026-05-18'
+				entries={[
+					{
+						id: "a",
+						title: "A",
+						start: "2026-05-18T10:00:00",
+						end: "2026-05-18T11:00:00",
+					},
+				]}
+				timeSlotMinutes={30}
+				onEntryTimeChange={handleEntryTimeChange}
+				onItemClick={handleItemClick}
+				onTimeRangeSelect={handleTimeRangeSelect}
+				onTimeSlotClick={handleTimeSlotClick}
+				slots={{ item: ClickableTestItem }}
+			/>,
+		);
+		setupWeekDragGeometry(container);
+		const monday = container.querySelector('[data-calendar-week-column="2026-05-18"]');
+
+		fireEvent.pointerDown(monday, {
+			button: 0,
+			clientX: 50,
+			clientY: 198,
+			pointerId: 1,
+		});
+		fireEvent.pointerUp(document, {
+			button: 0,
+			clientX: 50,
+			clientY: 198,
+			pointerId: 1,
+		});
+		fireEvent.click(monday, { clientX: 50, clientY: 198 });
+		fireEvent.click(screen.getByTestId("entry-a"));
+		dragPointer(container.querySelector('[data-calendar-week-entry="a"]'), {
+			from: { x: 50, y: 260 },
+			to: { x: 50, y: 312 },
+		});
+
+		expect(handleTimeSlotClick).toHaveBeenCalledTimes(1);
+		expect(handleItemClick).toHaveBeenCalledWith(expect.objectContaining({ id: "a" }));
+		expect(handleEntryTimeChange).toHaveBeenCalledTimes(1);
+		expect(handleEntryTimeChange.mock.calls[0][0].action).toBe("move");
+		expect(handleTimeRangeSelect).not.toHaveBeenCalled();
+	});
+
+	it("ignores other pointers and cancels active time range selection", () => {
+		const handleTimeRangeSelect = vi.fn();
+		const { container } = render(
+			<CalendarRoot
+				view={CALENDAR_VIEWS.WEEK}
+				date='2026-05-18'
+				entries={[]}
+				timeSlotMinutes={30}
+				onTimeRangeSelect={handleTimeRangeSelect}
+			/>,
+		);
+		setupWeekDragGeometry(container);
+		const monday = container.querySelector('[data-calendar-week-column="2026-05-18"]');
+
+		startDragPointer(monday, {
+			from: { x: 50, y: 250 },
+			to: { x: 50, y: 302 },
+		});
+		expect(
+			container.querySelector('[data-calendar-week-time-range-preview="2026-05-18"]'),
+		).toBeInTheDocument();
+
+		fireEvent.pointerCancel(document, { pointerId: 2 });
+		expect(
+			container.querySelector('[data-calendar-week-time-range-preview="2026-05-18"]'),
+		).toBeInTheDocument();
+
+		fireEvent.pointerCancel(document, { pointerId: 1 });
+		expect(
+			container.querySelector('[data-calendar-week-time-range-preview="2026-05-18"]'),
+		).not.toBeInTheDocument();
+		expect(handleTimeRangeSelect).not.toHaveBeenCalled();
 	});
 
 	it("navigates and selects Week View Time Slots with the keyboard", () => {

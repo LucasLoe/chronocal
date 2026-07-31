@@ -10,6 +10,7 @@ const requiredExports = [
 	"CalendarMonthWeekdayHeader",
 	"CalendarRowHeader",
 	"CalendarTimeSlotIndicator",
+	"CalendarTimeRangePreview",
 	"CalendarTopbar",
 	"CalendarWeekHeader",
 	"useCalendar",

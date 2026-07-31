@@ -12,6 +12,7 @@ import { CalendarItem } from "./CalendarItem";
 import { CalendarMonthWeekdayHeader } from "./CalendarMonthWeekdayHeader";
 import { CalendarRowHeader } from "./CalendarRowHeader";
 import { CalendarTimeSlotIndicator } from "./CalendarTimeSlotIndicator";
+import { CalendarTimeRangePreview } from "./CalendarTimeRangePreview";
 import { CalendarWeekHeader } from "./CalendarWeekHeader";
 import { useCalendarState } from "./useCalendarState";
 import { CALENDAR_VIEWS } from "./utils/views";
@@ -46,6 +47,7 @@ export function CalendarRoot(inProps) {
 	onShowWeekendChange,
 	onWorkHoursPresetChange,
 	onTimeSlotMinutesChange,
+	onTimeRangeSelect,
 	onTimeSlotClick,
 	onItemClick,
 	onEntryTimeChange,
@@ -93,6 +95,7 @@ export function CalendarRoot(inProps) {
 			monthWeekdayHeader: CalendarMonthWeekdayHeader,
 			rowHeader: CalendarRowHeader,
 			timeSlotIndicator: CalendarTimeSlotIndicator,
+			timeRangePreview: CalendarTimeRangePreview,
 			weekHeader: CalendarWeekHeader,
 			...slots,
 		}),
@@ -136,6 +139,7 @@ export function CalendarRoot(inProps) {
 						onItemClick={onItemClick}
 						onEntryTimeChange={onEntryTimeChange}
 						onExternalItemDrop={onExternalItemDrop}
+						onTimeRangeSelect={onTimeRangeSelect}
 						showRowHeaders={showRowHeaders}
 						slots={resolvedSlots}
 						slotProps={slotProps}

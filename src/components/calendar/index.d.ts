@@ -66,6 +66,11 @@ export interface CalendarTimeSlot {
 	minutes: number;
 }
 
+export interface CalendarTimeRangePreviewLayout {
+	top: number;
+	height: number;
+}
+
 export interface RowHeaderOwnerState {
 	view: CalendarView;
 	rowIndex: number;
@@ -123,6 +128,18 @@ export interface TimeSlotIndicatorOwnerState {
 	date: Dayjs;
 	view: "week";
 	timeSlot: CalendarTimeSlot;
+}
+
+export interface TimeRangePreviewOwnerState {
+	start: Dayjs;
+	end: Dayjs;
+	date: Dayjs;
+	dateKey: string;
+	timeSlotMinutes: number;
+	label: string;
+	layout: CalendarTimeRangePreviewLayout;
+	view: "week";
+	hourHeight: number;
 }
 
 export interface CalendarCellHeaderProps {
@@ -218,6 +235,21 @@ export interface CalendarTimeSlotIndicatorProps {
 	[key: string]: unknown;
 }
 
+export interface CalendarTimeRangePreviewProps {
+	start: Dayjs;
+	end: Dayjs;
+	date: Dayjs;
+	timeSlotMinutes: number;
+	label: string;
+	layout: CalendarTimeRangePreviewLayout;
+	view: "week";
+	ownerState: TimeRangePreviewOwnerState;
+	labelProps?: CalendarNativeSlotProps;
+	children?: ReactNode;
+	sx?: SxProps<Theme>;
+	[key: string]: unknown;
+}
+
 export interface CalendarSlots {
 	cell?: ComponentType<CalendarCellProps>;
 	cellHeader?: ComponentType<CalendarCellHeaderProps>;
@@ -226,6 +258,7 @@ export interface CalendarSlots {
 	monthWeekdayHeader?: ComponentType<CalendarMonthWeekdayHeaderProps>;
 	rowHeader?: ComponentType<CalendarRowHeaderProps>;
 	timeSlotIndicator?: ComponentType<CalendarTimeSlotIndicatorProps>;
+	timeRangePreview?: ComponentType<CalendarTimeRangePreviewProps>;
 	weekHeader?: ComponentType<CalendarWeekHeaderProps>;
 }
 
@@ -247,6 +280,7 @@ export interface CalendarSlotProps {
 	monthWeekdayLabel?: CalendarNativeSlotProps;
 	rowHeader?: Partial<CalendarRowHeaderProps>;
 	timeSlotIndicator?: Partial<CalendarTimeSlotIndicatorProps>;
+	timeRangePreview?: Partial<CalendarTimeRangePreviewProps>;
 	weekColumn?: CalendarNativeSlotProps;
 	weekContent?: CalendarNativeSlotProps;
 	weekDraggableEntry?: CalendarNativeSlotProps;
@@ -274,6 +308,7 @@ export type CalendarThemeComponentName =
 	| "CALENDAR_CalendarRoot"
 	| "CALENDAR_CalendarRowHeader"
 	| "CALENDAR_CalendarTimeSlotIndicator"
+	| "CALENDAR_CalendarTimeRangePreview"
 	| "CALENDAR_CalendarTopbar"
 	| "CALENDAR_CalendarWeekHeader"
 	| "CALENDAR_CalendarWeekView";
@@ -283,6 +318,13 @@ export interface TimeSlotClickPayload {
 	end: Dayjs;
 	date: Dayjs;
 	view: "week";
+	timeSlotMinutes: number;
+}
+
+export interface TimeRangeSelectPayload {
+	start: Dayjs;
+	end: Dayjs;
+	date: Dayjs;
 	timeSlotMinutes: number;
 }
 
@@ -342,6 +384,7 @@ export interface CalendarRootProps<TEntry extends CalendarEntryItem = CalendarEn
 	onTimeSlotMinutesChange?: (nextMinutes: number) => void;
 	locale?: string;
 	onTimeSlotClick?: (payload: TimeSlotClickPayload) => void;
+	onTimeRangeSelect?: (payload: TimeRangeSelectPayload) => void;
 	onItemClick?: (item: NormalizedCalendarEntry<TEntry>) => void;
 	onEntryTimeChange?: (payload: EntryTimeChangePayload<TEntry>) => void;
 	onExternalItemDrop?: (payload: ExternalItemDropPayload) => void;
@@ -408,6 +451,7 @@ export function CalendarItem(props: CalendarItemProps): ReactElement;
 export function CalendarMonthWeekdayHeader(props: CalendarMonthWeekdayHeaderProps): ReactElement;
 export function CalendarRowHeader(props: CalendarRowHeaderProps): ReactElement;
 export function CalendarTimeSlotIndicator(props: CalendarTimeSlotIndicatorProps): ReactElement;
+export function CalendarTimeRangePreview(props: CalendarTimeRangePreviewProps): ReactElement;
 export function CalendarWeekHeader(props: CalendarWeekHeaderProps): ReactElement;
 export function CalendarTopbar(props: {
 	children?: ReactNode;

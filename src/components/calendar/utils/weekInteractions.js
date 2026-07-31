@@ -47,6 +47,55 @@ export function createWeekTimeSlotClickPayload({ date, view, timeSlot }) {
 	};
 }
 
+export function createWeekTimeRangeInteraction({
+	date,
+	timeSlot,
+	pointerStartX,
+	pointerStartY,
+	pointerId,
+}) {
+	return {
+		date,
+		dateKey: date.format("YYYY-MM-DD"),
+		timeSlot,
+		pointerStartX,
+		pointerStartY,
+		pointerId,
+		hasMoved: false,
+	};
+}
+
+export function createWeekTimeRangeSelection({ interaction, timeSlot }) {
+	const isUpward = timeSlot.index < interaction.timeSlot.index;
+
+	return {
+		start: isUpward ? timeSlot.start : interaction.timeSlot.start,
+		end: isUpward ? interaction.timeSlot.end : timeSlot.end,
+		date: interaction.date,
+		timeSlotMinutes: interaction.timeSlot.minutes,
+	};
+}
+
+export function createWeekTimeRangePreview({
+	selection,
+	locale,
+	workHours,
+	hourHeight = WEEK_HOUR_HEIGHT,
+}) {
+	return {
+		...selection,
+		dateKey: selection.date.format("YYYY-MM-DD"),
+		layout: getWeekEntryRangeLayout({
+			start: selection.start,
+			end: selection.end,
+			date: selection.date,
+			workHours,
+			hourHeight,
+		}),
+		label: `${formatTime(selection.start, locale)} - ${formatTime(selection.end, locale)}`,
+	};
+}
+
 export function trapWeekEntryPointerEvent(event) {
 	event.stopPropagation();
 }
@@ -78,6 +127,7 @@ export function createWeekEntryTimeInteraction({
 	pointerY,
 	pointerStartX,
 	pointerStartY,
+	pointerId,
 	timeSlotMinutes,
 }) {
 	const start = dayjs(entry.start);
@@ -95,6 +145,7 @@ export function createWeekEntryTimeInteraction({
 		pointerOffsetY: action === WEEK_ENTRY_TIME_ACTIONS.MOVE ? pointerY - (entry.layout?.top ?? 0) : 0,
 		pointerStartX,
 		pointerStartY,
+		pointerId,
 		hasMoved: false,
 		timeSlotMinutes,
 	};

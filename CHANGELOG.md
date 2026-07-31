@@ -4,6 +4,17 @@ All notable changes to the Chronocal npm package are documented here.
 
 This project follows Semantic Versioning. Changelog sections use Keep a Changelog-style headings so humans, release tooling, and AI agents can quickly identify package impact.
 
+## Unreleased
+
+### Added
+
+- Added pointer-driven Week View Time Range Selection through `onTimeRangeSelect`, including upward and downward Time Slot snapping, source-day confinement, and post-drag Time Slot click suppression.
+- Added the replaceable `timeRangePreview` slot and exported `CalendarTimeRangePreview` default with a configurable `HH:mm - HH:mm` preview label.
+
+### Stability
+
+- Added utility and integration coverage for range ordering, preview data, source-column confinement, empty-space activation, and existing entry interaction precedence.
+
 ## 1.3.0 - 2026-07-23
 
 ### Changed
